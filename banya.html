@@ -196,7 +196,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   </details>
   <div class="btns"><button class="btn ghost" data-act="newsession">Новый сеанс</button></div>
   <div class="foot">ТЕПЛО · ЗДОРОВ'Я · ВІДПОЧИНОК · ГАРМОНІЯ</div>
-  <div class="foot" style="opacity:.55;margin-top:4px">версия 8 · 21.11.2026</div>
+  <div class="foot" style="opacity:.55;margin-top:4px">версия 9 · 21.11.2026</div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -283,7 +283,7 @@ function renderControls(){
  h+='<div class="sec">'+
   '<div class="row">'+I.clock+'<div class="lbl">Часов в бане</div>'+stepper('h',fh(s.hours))+'</div>'+
   '<div class="row">'+I.group+'<div class="lbl">Участников<small>без Саши</small></div>'+stepper('n',s.count)+'</div>'+
-  '<div class="row">'+I.man+'<div class="lbl">Вызываем СУПЕР Сашу — банщика<small>Очищает как телесно, так и духовно. Обладает секретными техниками древности. Эксклюзивная опция — перерождение в ручье.<br><b class="sep">Оплачивается отдельно. В общий счёт не входит.</b></small></div><button class="sw'+(s.sasha.on?' on':'')+'" data-act="sasha"></button></div>'+
+  '<div class="row">'+I.man+'<div class="lbl">Вызываем СУПЕР Сашу — банщика<small>Очищает как телесно, так и духовно. Обладает секретными техниками древности. Эксклюзивная опция — перерождение в ручье.<br><b class="sep">Оплачивается отдельно. В общий счёт не входит. И за баню не платит.</b></small></div><button class="sw'+(s.sasha.on?' on':'')+'" data-act="sasha"></button></div>'+
   '</div>';
  if(s.sasha.on){
   h+='<div class="ban">Кого парил Саша</div><div class="sec"><div class="plist">';
