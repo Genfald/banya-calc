@@ -191,7 +191,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   </details>
   <div class="btns"><button class="btn ghost" data-act="newsession">Новый сеанс</button></div>
   <div class="foot">ТЕПЛО · ЗДОРОВ'Я · ВІДПОЧИНОК · ГАРМОНІЯ</div>
-  <div class="foot" style="opacity:.55;margin-top:4px">версия 6 · 21.11.2026</div>
+  <div class="foot" style="opacity:.55;margin-top:4px">версия 7 · 21.11.2026</div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -210,7 +210,7 @@ var I={
 };
 
 function defaults(){return {v:5,ts:0,hours:2,count:4,names:[],steamed:[],prices:{base:1500,baseMax:5,perHead:300},
- bl:[{id:'b1',q:0,p:0}],tip:0,sasha:{on:true,tip:0}}}
+ bl:[{id:'b1',q:0,p:170}],tip:0,sasha:{on:true,tip:0}}}
 var state=defaults();
 
 var $=function(s){return document.querySelector(s)};
@@ -235,7 +235,7 @@ function merge(o){if(!o||typeof o!=='object')return;var d=defaults();
   names=src.map(function(p){return String(p.name||'')});steamed=src.map(function(p){return !!(p.steamed||p.steam)});count=src.length||d.count}
  var tip=typeof o.tip==='number'?o.tip:(o.tip&&o.tip.mode==='amt'?+o.tip.value||0:0);
  state={v:5,ts:o.ts||0,hours:o.hours||d.hours,count:Math.max(1,Math.min(30,count)),names:names,steamed:steamed,prices:Object.assign(d.prices,o.prices||{}),
-  bl:(Array.isArray(o.bl)&&o.bl.length)?o.bl.map(function(x){return {id:x.id||uid(),q:+x.q||0,p:+x.p||0}}):[{id:'b1',q:0,p:0}],
+  bl:(Array.isArray(o.bl)&&o.bl.length)?o.bl.map(function(x,i){return {id:x.id||uid(),q:+x.q||0,p:+x.p||(i===0?170:0)}}):[{id:'b1',q:0,p:170}],
   tip:tip,sasha:Object.assign(d.sasha,o.sasha||{})}}
 function load(cb){
  try{var s=localStorage.getItem(KEY);if(!s)for(var i=0;i<OLDS.length&&!s;i++)s=localStorage.getItem(OLDS[i]);if(s)merge(JSON.parse(s))}catch(e){}
