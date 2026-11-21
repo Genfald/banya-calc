@@ -124,6 +124,20 @@ details summary::-webkit-details-marker{display:none}
 .sumrow{display:flex;align-items:center;gap:10px;padding:10px 0 4px}
 .sumrow input{flex:1;min-width:0;font-size:22px;text-align:right;padding:10px 12px}
 .sumrow .cur{font-family:Oswald,sans-serif;color:var(--muted);font-size:16px}
+.bline{display:flex;align-items:center;gap:8px;padding:4px 0 4px 32px}
+.bline .step button{width:32px;height:32px}
+.bline .step span{min-width:30px}
+.bline .mul{color:var(--muted);font-family:Oswald,sans-serif;font-size:15px}
+.bline input{width:78px;text-align:right;font-size:16px;padding:6px 8px}
+.bline .cur{font-family:Oswald,sans-serif;color:var(--muted);font-size:13px}
+.bline .x{margin-left:auto}
+.badd{margin:2px 0 4px 32px;background:none;border:1px dashed rgba(240,200,121,.35);color:var(--muted);font-family:Bitter,serif;font-size:12px;font-weight:700;border-radius:8px;padding:5px 10px}
+.btot{font-family:Oswald,sans-serif;font-weight:700;color:var(--gold);font-size:18px;white-space:nowrap}
+.btot em{font-style:normal;font-weight:500;font-size:.7em;color:var(--muted);margin-left:2px}
+.ename{flex:1;min-width:0;font-family:Bitter,serif!important;color:var(--text)!important;font-weight:700;font-size:16px!important;padding:6px 9px!important}
+.esave{background:linear-gradient(180deg,#e8913a,#b8561a);border:1px solid #f6c06a;color:#fff3df;border-radius:8px;font-weight:900;width:34px;height:32px;flex-shrink:0}
+.edel{background:rgba(120,30,10,.35);border:1px solid rgba(255,122,85,.5);color:var(--bad);border-radius:8px;font-family:Bitter,serif;font-size:12px;font-weight:700;padding:0 9px;height:32px;flex-shrink:0}
+.pedit{background:none;border:0;color:#9a7a58;font-size:16px;padding:6px 4px;flex-shrink:0}
 /* компакт */
 body{padding-top:6px}
 .hero{padding:0}
@@ -187,8 +201,9 @@ var I={
 };
 
 function defaults(){return {v:3,ts:0,hours:2,round:10,prices:{base:1500,baseMax:5,perHead:300},
- brooms:0,tip:{mode:'amt',value:0},sasha:{on:true,tip:0},people:[]}}
+ bl:[{id:'b1',q:0,p:0}],tip:{mode:'amt',value:0},sasha:{on:true,tip:0},people:[]}}
 var state=defaults();
+var editing=null;
 
 var $=function(s){return document.querySelector(s)};
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -208,7 +223,7 @@ function save(){clearTimeout(save.t);save.t=setTimeout(function(){
 function merge(o){if(!o||typeof o!=='object')return;var d=defaults();
  var ppl=Array.isArray(o.people)?o.people.map(function(p){return {id:p.id||uid(),name:String(p.name||''),present:!!p.present,steamed:!!(p.steamed||p.steam)}}):[];
  state={v:3,ts:o.ts||0,hours:o.hours||d.hours,round:o.round||d.round,prices:Object.assign(d.prices,o.prices||{}),
-  brooms:typeof o.brooms==='number'?o.brooms:0,tip:(o.tip&&o.tip.mode==='amt')?o.tip:{mode:'amt',value:0},sasha:Object.assign(d.sasha,o.sasha||{}),people:ppl}}
+  bl:(Array.isArray(o.bl)&&o.bl.length)?o.bl.map(function(x){return {id:x.id||uid(),q:+x.q||0,p:+x.p||0}}):(o.brooms>0?[{id:'b1',q:1,p:+o.brooms}]:[{id:'b1',q:0,p:0}]),tip:(o.tip&&o.tip.mode==='amt')?o.tip:{mode:'amt',value:0},sasha:Object.assign(d.sasha,o.sasha||{}),people:ppl}}
 function load(cb){
  try{var s=localStorage.getItem(KEY)||localStorage.getItem(OLD);if(s)merge(JSON.parse(s))}catch(e){}
  if(!hasCloud){cb();return}
@@ -222,7 +237,7 @@ function calc(){
  var heads=n+(sOn?1:0);
  var H=+state.hours||0,pr=state.prices,rentTotal=0,share=0,mode='';
  if(heads>0&&H>0){if(heads<=pr.baseMax){rentTotal=pr.base*H;mode='flat'}else{rentTotal=pr.perHead*heads*H;mode='head'}share=rentTotal/heads}
- var broomsTotal=n?(+state.brooms||0):0, broomEach=n?broomsTotal/n:0;
+ var bsum=0;state.bl.forEach(function(x){bsum+=(+x.q||0)*(+x.p||0)});var broomsTotal=n?bsum:0, broomEach=n?broomsTotal/n:0;
  var tv=+state.tip.value||0;
  var staffTip=n?tv:0;
  var tipEach=n?staffTip/n:0;
@@ -257,15 +272,19 @@ function renderControls(){
  h+='<div class="ban">Кто пришёл</div><div class="sec"><div class="plist">';
  if(!s.people.length)h+='<div class="hint">Добавь имена — список сохранится. В следующий раз просто ставь галочки, кто пришёл.</div>';
  s.people.forEach(function(p){
+  if(editing===p.id){h+='<div class="prow on"><input class="ename" id="ename" value="'+esc(p.name)+'" maxlength="24" enterkeyhint="done"><button class="esave" data-act="esave" data-id="'+p.id+'">✓</button><button class="edel" data-act="del" data-id="'+p.id+'">удалить</button></div>';return}
   h+='<div class="prow '+(p.present?'on':'off')+'"><button class="pchk" data-act="tp" data-id="'+p.id+'">✓</button>'+
    '<span class="pname" data-act="tp" data-id="'+p.id+'">'+esc(p.name)+'</span>'+
    (p.present&&s.sasha.on?'<button class="steamchk'+(p.steamed?' on':'')+'" data-act="steam" data-id="'+p.id+'"><span class="box">'+(p.steamed?'✓':'')+'</span>парил</button>':'')+
-   '<button class="x" data-act="del" data-id="'+p.id+'">✕</button></div>';
+   '<button class="pedit" data-act="edit" data-id="'+p.id+'" aria-label="Изменить">✎</button></div>';
  });
  h+='</div><div class="add"><input id="newName" placeholder="Имя участника" maxlength="24" enterkeyhint="done"><button class="btn" data-act="add">＋</button></div></div>';
  function money(id,ico,label,val){return '<div class="row money">'+ico+'<div class="lbl">'+label+'</div><input id="'+id+'" type="number" inputmode="numeric" min="0" step="10" placeholder="0" value="'+(val||'')+'"><span class="cur">грн</span></div>'}
  h+='<div class="ban">Веники и чаевые</div><div class="sec">'+
-  money('brooms',I.leaf,'Веники<small>поровну на всех</small>',s.brooms)+
+  '<div class="row" style="background:none;padding-bottom:0">'+I.leaf+'<div class="lbl">Веники<small>штук × цена, поровну на всех</small></div><span class="btot" id="btot"></span></div>'+
+  s.bl.map(function(x){return '<div class="bline"><div class="step"><button data-act="bq-" data-id="'+x.id+'">−</button><span>'+(x.q||0)+'</span><button data-act="bq+" data-id="'+x.id+'">+</button></div><span class="mul">×</span><input data-bp="'+x.id+'" type="number" inputmode="numeric" min="0" placeholder="цена" value="'+(x.p||'')+'"><span class="cur">грн</span>'+(s.bl.length>1?'<button class="x" data-act="bdel" data-id="'+x.id+'">✕</button>':'')+'</div>'}).join('')+
+  '<button class="badd" data-act="badd">+ другая цена</button>'+
+  '<div style="height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);margin-top:4px"></div>'+
   money('tipAmt',I.coin,'Чаевые бане<small>поровну на всех</small>',s.tip.value)+
   (s.sasha.on?money('sashaTip',I.man,'Чаевые Саше<small>на тех, кого парил</small>',s.sasha.tip):'')+
   '<div class="mhint" id="moneyInfo"></div></div>';
@@ -280,6 +299,7 @@ function renderPrices(){var p=state.prices,h='';
 
 function renderResult(){
  var c=calc(),h='';
+ var bt=$('#btot');if(bt){var bs=0;state.bl.forEach(function(x){bs+=(+x.q||0)*(+x.p||0)});bt.innerHTML=bs?'= '+fmt(bs)+'<em>грн</em>':''}
  var mi=$('#moneyInfo');
  if(mi){var t=[];
   if(c.broomsTotal)t.push('веники по <b>'+fmt(c.broomEach)+'</b>');
@@ -332,12 +352,16 @@ function updMain(c){if(!inTg)return;try{
 function ask(msg,cb){if(inTg&&TG.isVersionAtLeast&&TG.isVersionAtLeast('6.2'))TG.showConfirm(msg,function(ok){if(ok)cb()});else if(window.confirm(msg))cb()}
 
 /* ---------- события ---------- */
+function bl(id){for(var i=0;i<state.bl.length;i++)if(state.bl[i].id===id)return state.bl[i];return {}}
+function applyName(id,v){var p=person(id);v=(v||'').trim();if(p&&v)p.name=v.slice(0,24)}
+function saveName(){var i=$('#ename');if(i&&editing)applyName(editing,i.value);editing=null;save();renderControls();renderResult();hap()}
 function addPerson(){var inp=$('#newName'),n=(inp.value||'').trim();if(!n)return;
  state.people.push({id:uid(),name:n,present:true,steamed:false});save();renderAll();hap();
  setTimeout(function(){var i=$('#newName');if(i)i.focus()},0)}
 document.addEventListener('click',function(e){
  var b=e.target.closest('[data-act]');if(!b)return;
  var a=b.dataset.act,id=b.dataset.id,p=id?person(id):null;
+ if(editing&&a!=='esave'&&a!=='del'&&a!=='edit'){var ei=$('#ename');if(ei)applyName(editing,ei.value);editing=null}
  switch(a){
   case 'h+':state.hours=Math.min(12,state.hours+0.5);break;
   case 'h-':state.hours=Math.max(0.5,state.hours-0.5);break;
@@ -347,20 +371,26 @@ document.addEventListener('click',function(e){
   case 'tipp':state.tip={mode:'pct',value:+b.dataset.v};break;
   case 'stip':state.sasha.tip=+b.dataset.v;break;
   case 'add':addPerson();return;
-  case 'del':ask('Убрать «'+p.name+'» из списка?',function(){state.people=state.people.filter(function(x){return x.id!==id});save();renderAll()});return;
+  case 'edit':editing=id;renderControls();renderResult();setTimeout(function(){var i=$('#ename');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},0);return;
+  case 'esave':saveName();return;
+  case 'bq+':bl(id).q=(bl(id).q||0)+1;break;
+  case 'bq-':bl(id).q=Math.max(0,(bl(id).q||0)-1);break;
+  case 'badd':state.bl.push({id:uid(),q:0,p:0});break;
+  case 'bdel':state.bl=state.bl.filter(function(x){return x.id!==id});break;
+  case 'del':ask('Убрать «'+p.name+'» из списка?',function(){editing=null;state.people=state.people.filter(function(x){return x.id!==id});save();renderAll()});return;
   case 'copy':copy();return;
   case 'share':share();return;
   case 'resetprices':state.prices=defaults().prices;save();renderAll();toast('Цены из прайса');return;
   case 'newsession':ask('Начать новый сеанс? Галочки, веники и чаевые сбросятся, список имён останется.',function(){
-   state.people.forEach(function(x){x.present=false;x.steamed=false});state.brooms=0;state.tip={mode:'amt',value:0};state.sasha.tip=0;save();renderAll();window.scrollTo(0,0)});return;
+   state.people.forEach(function(x){x.present=false;x.steamed=false});state.bl.forEach(function(x){x.q=0});editing=null;state.tip={mode:'amt',value:0};state.sasha.tip=0;save();renderAll();window.scrollTo(0,0)});return;
   default:return;
  }
  hap();save();renderControls();renderResult();
 });
-document.addEventListener('keydown',function(e){if(e.target.id==='newName'&&e.key==='Enter'){e.preventDefault();addPerson()}});
+document.addEventListener('keydown',function(e){if(e.key!=='Enter')return;if(e.target.id==='newName'){e.preventDefault();addPerson()}else if(e.target.id==='ename'){e.preventDefault();saveName()}});
 function clearChips(act){var l=document.querySelectorAll('[data-act="'+act+'"]');for(var i=0;i<l.length;i++)l[i].classList.remove('on')}
 document.addEventListener('input',function(e){var t=e.target,v=Math.max(0,+t.value||0);
- if(t.id==='brooms'){state.brooms=v}
+ if(t.dataset.bp){bl(t.dataset.bp).p=v}
  else if(t.id==='tipAmt'){state.tip={mode:'amt',value:v}}
  else if(t.id==='sashaTip'){state.sasha.tip=v}
  else if(t.dataset.cfg){state.prices[t.dataset.cfg]=t.dataset.cfg==='baseMax'?Math.max(1,Math.round(v)):v}
