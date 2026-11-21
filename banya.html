@@ -151,6 +151,15 @@ details summary::-webkit-details-marker{display:none}
 .super .t{font-weight:900;font-size:15px;color:var(--gold);letter-spacing:.02em}
 .super .t small{display:block;font-weight:600;font-size:11px;color:var(--muted);font-style:italic;letter-spacing:0}
 .super .grp:last-child{background:none}
+.priceimg{display:block;width:100%;border-radius:12px;margin:8px 0 4px;border:1px solid rgba(240,200,121,.35);cursor:zoom-in}
+.phint{text-align:center;font-size:11px;color:var(--muted);font-style:italic;margin-bottom:6px}
+.zoomwrap{position:fixed;inset:0;z-index:50;background:#080402;display:none;overflow:auto;-webkit-overflow-scrolling:touch}
+.zoomwrap.on{display:flex;align-items:center}
+.zoomwrap.big{align-items:flex-start}
+.zoomwrap img{display:block;width:100%;max-width:900px;margin:auto;flex-shrink:0}
+.zoomwrap.big img{width:200%;max-width:none}
+.zoomwrap .zh{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);font-size:12px;color:var(--muted);background:rgba(0,0,0,.6);padding:5px 10px;border-radius:10px;font-style:italic;white-space:nowrap}
+.zoomwrap .zx{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.6);border:1px solid rgba(240,200,121,.5);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px}
 /* компакт */
 body{padding-top:6px}
 .hero{padding:0}
@@ -191,14 +200,17 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   <div class="ban" id="resBan">С каждого</div>
   <div class="sec" id="result"></div>
   <details class="sec">
-    <summary><span class="ban sm">Прайс аренды</span></summary>
+    <summary><span class="ban sm">Прайс бани</span></summary>
+    <img class="priceimg" src="price.jpg" alt="Прайс бани" loading="lazy" data-act="zoom">
+    <div class="phint">Нажми на прайс, чтобы открыть крупно</div>
     <div id="prices"></div>
   </details>
   <div class="btns"><button class="btn ghost" data-act="newsession">Новый сеанс</button></div>
   <div class="foot">ТЕПЛО · ЗДОРОВ'Я · ВІДПОЧИНОК · ГАРМОНІЯ</div>
-  <div class="foot" style="opacity:.55;margin-top:4px">версия 10 · 21.11.2026</div>
+  <div class="foot" style="opacity:.55;margin-top:4px">версия 11 · 21.11.2026</div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="zoomwrap" id="zoomwrap"><img src="price.jpg" alt="Прайс бани" data-act="zoom2"><span class="zx" data-act="unzoom">✕</span><span class="zh">нажми на прайс — увеличить вдвое</span></div>
 <script>
 (function(){
 var TG=window.Telegram&&window.Telegram.WebApp;
@@ -380,6 +392,9 @@ document.addEventListener('click',function(e){
   case 'bq-':bl(id).q=Math.max(0,(bl(id).q||0)-1);break;
   case 'badd':state.bl.push({id:uid(),q:0,p:0});break;
   case 'bdel':state.bl=state.bl.filter(function(x){return x.id!==id});break;
+  case 'zoom':$('#zoomwrap').classList.add('on');return;
+  case 'unzoom':$('#zoomwrap').classList.remove('on','big');return;
+  case 'zoom2':var z=$('#zoomwrap');z.classList.toggle('big');z.scrollTo(z.scrollWidth/4,0);return;
   case 'copy':copy();return;
   case 'share':share();return;
   case 'resetprices':state.prices=defaults().prices;save();renderAll();toast('Цены из прайса');return;
