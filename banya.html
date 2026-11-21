@@ -160,6 +160,7 @@ details summary::-webkit-details-marker{display:none}
 .zoomwrap.big img{width:200%;max-width:none}
 .zoomwrap .zh{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);font-size:12px;color:var(--muted);background:rgba(0,0,0,.6);padding:5px 10px;border-radius:10px;font-style:italic;white-space:nowrap}
 .zoomwrap .zx{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.6);border:1px solid rgba(240,200,121,.5);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px}
+.pedit-sum{font-size:12px;color:var(--muted);font-style:italic;padding:6px 0;text-decoration:underline dotted}
 /* компакт */
 body{padding-top:6px}
 .hero{padding:0}
@@ -199,15 +200,18 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   <div id="controls"></div>
   <div class="ban" id="resBan">С каждого</div>
   <div class="sec" id="result"></div>
-  <details class="sec">
-    <summary><span class="ban sm">Прайс бани</span></summary>
-    <img class="priceimg" src="price.jpg" alt="Прайс бани" loading="lazy" data-act="zoom">
+  <div class="ban">Прайс бани</div>
+  <div class="sec">
+    <img class="priceimg" src="price.jpg" alt="Прайс бани" data-act="zoom">
     <div class="phint">Нажми на прайс, чтобы открыть крупно</div>
-    <div id="prices"></div>
-  </details>
+    <details class="pedit-box">
+      <summary class="pedit-sum">⚙ изменить цены аренды для расчёта</summary>
+      <div id="prices"></div>
+    </details>
+  </div>
   <div class="btns"><button class="btn ghost" data-act="newsession">Новый сеанс</button></div>
   <div class="foot">ТЕПЛО · ЗДОРОВ'Я · ВІДПОЧИНОК · ГАРМОНІЯ</div>
-  <div class="foot" style="opacity:.55;margin-top:4px">версия 11 · 21.11.2026</div>
+  <div class="foot" style="opacity:.55;margin-top:4px">версия 12 · 21.11.2026</div>
 </div>
 <div class="toast" id="toast"></div>
 <div class="zoomwrap" id="zoomwrap"><img src="price.jpg" alt="Прайс бани" data-act="zoom2"><span class="zx" data-act="unzoom">✕</span><span class="zh">нажми на прайс — увеличить вдвое</span></div>
