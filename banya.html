@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Лазня — расчёт</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;700;800;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--text:#f6e8d2;--muted:#c2a27c;--gold:#f0c879;--gold2:#e8a44c;--acc:#d9711f;--line:rgba(232,170,90,.45);--ok:#a8d27a;--bad:#ff7a55}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;color:var(--text);font-family:Bitter,Georgia,serif;font-size:15px;background:#120a05}
+body{padding:10px 12px calc(30px + env(safe-area-inset-bottom));min-height:100vh;position:relative}
+/* дерево, фонарь, окно, виньетка */
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:
+ radial-gradient(45% 30% at 92% 10%,rgba(255,160,60,.45),transparent 70%),
+ radial-gradient(35% 45% at 0% 22%,rgba(120,160,200,.16),transparent 70%),
+ radial-gradient(60% 40% at 15% 95%,rgba(255,120,40,.22),transparent 70%),
+ radial-gradient(140% 100% at 50% 45%,transparent 35%,rgba(0,0,0,.75)),
+ repeating-linear-gradient(90deg,rgba(0,0,0,.35) 0 2px,transparent 2px 96px),
+ repeating-linear-gradient(0deg,rgba(255,200,140,.035) 0 1px,transparent 1px 6px),
+ repeating-linear-gradient(90deg,rgba(255,190,120,.03) 0 1px,transparent 1px 13px),
+ linear-gradient(180deg,#2b170a,#1a0e06 50%,#100804)}
+.wrap{max-width:560px;margin:0 auto}
+/* шапка как на прайсе */
+.hero{text-align:center;padding:6px 0 4px}
+.steamico{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--gold)}
+.steamico::before,.steamico::after{content:"";height:1px;flex:1;max-width:120px;background:linear-gradient(90deg,transparent,var(--gold))}
+.steamico::after{background:linear-gradient(90deg,var(--gold),transparent)}
+.steamico svg{width:30px;height:30px;filter:drop-shadow(0 0 6px rgba(255,170,70,.6))}
+h1{margin:0;font-weight:900;font-size:64px;line-height:1;letter-spacing:.03em;
+ background:linear-gradient(180deg,#ffe1a3 0%,#f3a548 38%,#c8641e 62%,#7b330f 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(0 3px 0 #3a1505) drop-shadow(0 0 18px rgba(255,140,40,.35))}
+.ban{position:relative;display:block;width:fit-content;max-width:100%;margin:12px auto 12px;padding:9px 28px 10px;text-align:center;
+ font-weight:800;font-size:19px;color:#fff3df;text-shadow:0 2px 2px rgba(0,0,0,.65);
+ background:repeating-linear-gradient(90deg,rgba(0,0,0,.12) 0 2px,transparent 2px 9px),
+ linear-gradient(90deg,rgba(110,45,12,0) 0%,#7a3410 5%,#a84c19 18%,#bd5c20 50%,#a84c19 82%,#7a3410 95%,rgba(110,45,12,0) 100%);
+ clip-path:polygon(1% 22%,7% 6%,28% 11%,52% 0,76% 9%,96% 3%,100% 42%,98% 86%,86% 100%,62% 91%,36% 100%,12% 93%,0 78%)}
+.ban.sm{font-size:16px;padding:7px 22px 8px}
+.date{color:var(--muted);font-size:13px;margin-top:-4px}
+.sec{background:rgba(12,6,2,.5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);border-radius:14px;padding:4px 14px 12px;margin:4px 0 14px;
+ box-shadow:inset 0 1px 0 rgba(240,200,121,.18),inset 0 -1px 0 rgba(240,200,121,.12)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;padding:6px 0;
+ background:linear-gradient(90deg,transparent,var(--line),transparent) bottom/100% 1px no-repeat}
+.row:last-child{background:none}
+.ico{width:26px;height:26px;color:var(--gold);flex-shrink:0;filter:drop-shadow(0 0 4px rgba(255,170,70,.4))}
+.lbl{flex:1;min-width:0;font-weight:700;font-size:16px}
+.lbl small{display:block;color:var(--muted);font-size:12px;font-weight:500;font-style:italic;margin-top:2px}
+.num{font-family:Oswald,sans-serif;font-weight:700;color:var(--gold);text-shadow:0 0 12px rgba(255,150,50,.35);white-space:nowrap}
+.num em{font-style:normal;font-weight:500;font-size:.62em;color:var(--text);margin-left:3px}
+.step{display:flex;align-items:center;border:1px solid rgba(240,200,121,.5);border-radius:10px;overflow:hidden;flex-shrink:0;background:rgba(0,0,0,.35)}
+.step button{width:36px;height:34px;border:0;background:linear-gradient(180deg,#5a2a0e,#3a1a08);color:var(--gold);font-size:20px;font-family:Oswald,sans-serif;line-height:1}
+.step span{min-width:38px;text-align:center;font-family:Oswald,sans-serif;font-weight:700;font-size:17px;color:var(--gold)}
+.sw{position:relative;width:50px;height:30px;border-radius:15px;background:#3a2212;border:1px solid rgba(240,200,121,.4);flex-shrink:0;transition:.2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#8a6f55;transition:.2s}
+.sw.on{background:linear-gradient(180deg,#e8913a,#b8561a)}.sw.on::after{left:23px;background:#fff2da}
+select,input{font-family:Oswald,sans-serif;font-size:16px;color:var(--gold);background:rgba(0,0,0,.4);border:1px solid rgba(240,200,121,.45);border-radius:10px;padding:7px 10px;outline:none}
+input::placeholder{color:#8a6a4a;font-family:Bitter,serif;font-size:14px}
+select:focus,input:focus{border-color:var(--gold)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:8px 0}
+.chip{font-family:Bitter,serif;font-weight:700;padding:8px 14px;border-radius:9px;border:1px solid rgba(240,200,121,.35);background:rgba(0,0,0,.35);color:var(--muted);font-size:14px}
+.chip.on{background:linear-gradient(180deg,#c9661f,#8f3f12);color:#fff3df;border-color:#f0a24a;box-shadow:0 0 12px rgba(255,140,40,.35)}
+.add{display:flex;gap:8px;padding:4px 0 8px}
+.add input{flex:1;min-width:0;font-family:Bitter,serif;color:var(--text)}
+.btn{font-family:Bitter,serif;font-size:15px;font-weight:800;border-radius:10px;border:1px solid rgba(240,200,121,.5);background:linear-gradient(180deg,#5a2a0e,#3a1a08);color:var(--gold);padding:10px 14px}
+.btn.pri{background:linear-gradient(180deg,#f0a24a,#c0601c);color:#2a1003;border-color:#f6c06a;box-shadow:0 0 16px rgba(255,140,40,.35)}
+.btn.ghost{background:rgba(0,0,0,.3);color:var(--muted)}
+.btns{display:flex;gap:8px;margin-top:12px}.btns .btn{flex:1}
+.hint{color:var(--muted);font-size:13px;font-style:italic;padding:6px 0}
+.person{border-radius:12px;padding:10px;margin:8px 0;background:rgba(0,0,0,.35);border:1px solid rgba(240,200,121,.22)}
+.phead{display:flex;align-items:center;gap:8px}
+.pname{font-weight:800;flex:1;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini{font-family:Bitter,serif;font-size:12px;font-weight:700;padding:6px 9px;border-radius:8px;border:1px solid rgba(240,200,121,.3);background:transparent;color:var(--muted)}
+.mini.on{border-color:var(--gold);color:var(--gold)}
+.steam{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:6px 8px;border-radius:10px;background:rgba(60,80,30,.18);border:1px solid rgba(140,180,90,.25)}
+.steam.on{background:rgba(80,110,40,.35);border-color:rgba(160,210,110,.6)}
+.steam .t{font-size:14px;font-weight:700;color:var(--ok);display:flex;align-items:center;gap:6px}
+.steam .t svg{width:18px;height:18px}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pill{display:inline-flex;align-items:center;border-radius:8px;border:1px dashed rgba(240,200,121,.3);color:var(--muted);font-size:13px;overflow:hidden}
+.pill b{padding:7px 9px;font-weight:600}
+.pill.has{border-style:solid;border-color:var(--gold2);color:var(--text);background:rgba(160,70,20,.35)}
+.pill i{font-style:normal;padding:7px 10px;border-left:1px solid rgba(240,200,121,.3);color:var(--bad);font-weight:800}
+.info{font-size:13px;color:var(--text);padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.35);margin-top:8px;border-left:3px solid var(--gold2)}
+.info b{font-family:Oswald,sans-serif;color:var(--gold);font-size:15px}
+.info.warn{border-left-color:var(--bad)}
+.tips{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0 2px;align-items:center}
+.tips .chip{padding:7px 11px;font-family:Oswald,sans-serif;font-weight:600;font-size:15px}
+.tips input{width:96px;text-align:right}
+.hero2{text-align:center;padding:6px 0 2px}
+.hero2 .cap{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.hero2 .num{font-size:54px;line-height:1.05}
+.hero2 .sub{font-size:13px;color:var(--muted);font-style:italic}
+.rrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;background:linear-gradient(90deg,transparent,var(--line),transparent) bottom/100% 1px no-repeat}
+.rrow .n{font-weight:800;font-size:16px}
+.rrow .d{font-size:12px;color:var(--muted);font-style:italic;margin-top:2px}
+.rrow .num{font-size:24px}
+.tot{display:flex;justify-content:space-between;align-items:baseline;padding-top:10px;margin-top:2px;font-weight:800}
+.tot .num{font-size:22px}
+.bath{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;padding-top:4px}
+details summary{cursor:pointer;list-style:none;text-align:center}
+details summary::-webkit-details-marker{display:none}
+.pr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;background:linear-gradient(90deg,transparent,var(--line),transparent) bottom/100% 1px no-repeat}
+.pr span{font-size:14px;font-weight:600}
+.pr input{width:92px;text-align:right}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:linear-gradient(180deg,#f6c66e,#e8913a);color:#2a1003;padding:10px 18px;border-radius:10px;font-weight:800;opacity:0;transition:.25s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.foot{text-align:center;color:#9a7a58;font-family:Oswald,sans-serif;font-size:11px;margin-top:16px;letter-spacing:.2em}
+.foot::before{content:"";display:block;height:1px;margin:0 auto 10px;max-width:300px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="steamico"><svg viewBox="0 0 40 40"><path d="M12 36c-4-5 4-8 0-14s4-9 0-17M20 36c-4-5 4-8 0-14s4-9 0-17M28 36c-4-5 4-8 0-14s4-9 0-17" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg></div>
+    <h1>ЛАЗНЯ</h1>
+    <div class="ban">Скидываемся по-честному!</div>
+    <div class="date" id="date"></div>
+  </div>
+  <div id="controls"></div>
+  <div class="ban">С каждого</div>
+  <div class="sec" id="result"></div>
+  <details class="sec">
+    <summary><span class="ban sm">Прайс</span></summary>
+    <div id="prices"></div>
+  </details>
+  <div class="btns"><button class="btn ghost" data-act="newsession">Новый сеанс</button></div>
+  <div class="foot">ТЕПЛО · ЗДОРОВ'Я · ВІДПОЧИНОК · ГАРМОНІЯ</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+var TG=window.Telegram&&window.Telegram.WebApp;
+var inTg=!!(TG&&TG.platform&&TG.platform!=='unknown');
+var hasCloud=inTg&&TG.isVersionAtLeast&&TG.isVersionAtLeast('6.9');
+var KEY='banya_v2';
+
+var I={
+ clock:'<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+ man:'<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="6" r="3.2" fill="currentColor"/><path d="M5 21c0-5 3-8 7-8s7 3 7 8z" fill="currentColor"/></svg>',
+ leaf:'<svg class="ico" viewBox="0 0 24 24"><path d="M4 20C4 10 10 4 20 4c0 10-6 16-16 16z" fill="currentColor" opacity=".9"/><path d="M4 20L15 9M9 15h4M11 13V9" stroke="#2a1205" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>',
+ coin:'<svg class="ico" viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="7" ry="3" fill="currentColor"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+ round:'<svg class="ico" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+};
+
+var DEFAULT_ITEMS=[
+ {id:'sheet',name:'Простыня',price:120},
+ {id:'towel',name:'Полотенце',price:120},
+ {id:'slip',name:'Тапочки',price:90},
+ {id:'hat',name:'Шапка',price:150},
+ {id:'att1',name:'Банщик бани, свой веник (10 мин)',short:'Банщик бани · свой веник',price:500},
+ {id:'att2',name:'Банщик бани, их веник (10 мин)',short:'Банщик бани · их веник',price:650},
+ {id:'broom',name:'Веник',price:170,group:true}
+];
+var BROOMS=[{id:'birch',name:'Берёза'},{id:'linden',name:'Липа'},{id:'euc',name:'Эвкалипт'},{id:'oak',name:'Дуб'}];
+
+function defaults(){return {v:2,ts:0,hours:2,round:10,
+ prices:{base:1500,baseMax:5,perHead:300},
+ items:JSON.parse(JSON.stringify(DEFAULT_ITEMS)),
+ brooms:{},
+ tip:{mode:'pct',value:0},
+ sasha:{on:true,tip:0},
+ people:[]}}
+var state=defaults();
+
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function fmt(n){return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f')}
+function fh(h){return String(h).replace('.',',')}
+function uid(){return Math.random().toString(36).slice(2,9)}
+function hap(){try{if(inTg)TG.HapticFeedback.selectionChanged()}catch(e){}}
+function toast(t){var el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show')},1800)}
+function itemById(id){for(var i=0;i<state.items.length;i++)if(state.items[i].id===id)return state.items[i];return null}
+function price(id){var it=itemById(id);return it?(+it.price||0):0}
+function extrasOf(ex){var s=0;for(var k in (ex||{}))s+=(ex[k]||0)*price(k);return s}
+function extrasText(ex){var out=[];for(var k in (ex||{})){var n=ex[k];if(!n)continue;var it=itemById(k);if(!it)continue;
+ out.push((it.short||it.name).toLowerCase()+(n>1?' ×'+n:'')+' '+fmt(n*it.price))}return out}
+function person(id){for(var i=0;i<state.people.length;i++)if(state.people[i].id===id)return state.people[i];return null}
+
+/* ---------- хранение ---------- */
+function save(){clearTimeout(save.t);save.t=setTimeout(function(){
+ state.ts=Date.now();var s=JSON.stringify(state);
+ try{localStorage.setItem(KEY,s)}catch(e){}
+ if(hasCloud&&s.length<4000){try{TG.CloudStorage.setItem(KEY,s,function(){})}catch(e){}}
+},300)}
+function merge(o){if(!o||typeof o!=='object')return;var d=defaults();
+ var items=d.items;if(Array.isArray(o.items))items=d.items.map(function(it){for(var i=0;i<o.items.length;i++)if(o.items[i].id===it.id)return Object.assign(it,{price:o.items[i].price});return it});
+ state={v:2,ts:o.ts||0,hours:o.hours||d.hours,round:o.round||d.round,prices:Object.assign(d.prices,o.prices||{}),items:items,
+  brooms:o.brooms||{},tip:Object.assign(d.tip,o.tip||{}),sasha:Object.assign(d.sasha,o.sasha||{}),people:Array.isArray(o.people)?o.people:[]}}
+function load(cb){
+ try{var s=localStorage.getItem(KEY);if(s)merge(JSON.parse(s))}catch(e){}
+ if(!hasCloud){cb();return}
+ try{TG.CloudStorage.getItem(KEY,function(err,val){if(!err&&val){try{var o=JSON.parse(val);if((o.ts||0)>(state.ts||0))merge(o)}catch(e){}}cb()})}catch(e){cb()}
+}
+
+/* ---------- расчёт ---------- */
+function calc(){
+ var P=state.people.filter(function(p){return p.present});
+ var payers=P.filter(function(p){return !p.kid});if(!payers.length)payers=P.slice();
+ var isPayer=function(p){return payers.indexOf(p)>=0};
+ var sOn=!!state.sasha.on;
+ var adults=P.filter(function(p){return !p.kid}).length+(sOn&&P.length?1:0);
+ var H=+state.hours||0,pr=state.prices,rentTotal=0,share=0,mode='';
+ if(adults>0&&H>0){if(adults<=pr.baseMax){rentTotal=pr.base*H;mode='flat'}else{rentTotal=pr.perHead*adults*H;mode='head'}share=rentTotal/adults}
+ var broomsN=0;for(var k in state.brooms)broomsN+=state.brooms[k]||0;
+ var broomsTotal=P.length?broomsN*price('broom'):0;
+ var broomEach=payers.length?broomsTotal/payers.length:0;
+ var personalExtras=0;P.forEach(function(p){personalExtras+=extrasOf(p.extras)});
+ var bathBase=rentTotal+personalExtras+broomsTotal;
+ var tv=+state.tip.value||0;
+ var staffTip=P.length?(state.tip.mode==='pct'?bathBase*tv/100:tv):0;
+ var tipEach=payers.length?staffTip/payers.length:0;
+ var sashaRent=sOn&&P.length?share:0;
+ var sashaTip=sOn&&P.length?(+state.sasha.tip||0):0;
+ var pool=sashaRent+sashaTip;
+ var steamTotal=0;if(sOn)P.forEach(function(p){steamTotal+=(p.steam||0)});
+ var fallback=pool>0&&steamTotal===0;
+ var step=+state.round||1;
+ var up=function(x){return x>0?Math.ceil(x/step-1e-9)*step:0};
+ var rows=P.map(function(p){
+  var rent=p.kid?0:share,br=isPayer(p)?broomEach:0,tp=isPayer(p)?tipEach:0,ex=extrasOf(p.extras),sp=0;
+  if(pool>0){if(steamTotal>0)sp=pool*(p.steam||0)/steamTotal;else if(isPayer(p))sp=pool/payers.length}
+  var raw=rent+br+tp+ex+sp;
+  return {p:p,rent:rent,br:br,tp:tp,ex:ex,sp:sp,raw:raw,pay:up(raw)};
+ });
+ var baseRaw=share+broomEach+tipEach+(fallback?pool/(payers.length||1):0);
+ var collected=0;rows.forEach(function(r){collected+=r.pay});
+ var bath=bathBase+staffTip;
+ return {P:P,payers:payers,adults:adults,H:H,rentTotal:rentTotal,share:share,mode:mode,broomsN:broomsN,broomsTotal:broomsTotal,broomEach:broomEach,
+  personalExtras:personalExtras,bathBase:bathBase,staffTip:staffTip,tipEach:tipEach,sashaRent:sashaRent,sashaTip:sashaTip,pool:pool,
+  steamTotal:steamTotal,fallback:fallback,rows:rows,base:up(baseRaw),bath:bath,collected:collected,surplus:collected-bath-sashaTip};
+}
+function formula(c){if(!c.adults)return '—';
+ if(c.mode==='flat')return 'до '+state.prices.baseMax+' чел.: '+fmt(state.prices.base)+' × '+fh(c.H)+' ч = '+fmt(c.rentTotal);
+ return c.adults+' чел. × '+fmt(state.prices.perHead)+' × '+fh(c.H)+' ч = '+fmt(c.rentTotal)}
+
+/* ---------- отрисовка ---------- */
+function pills(id,ex){ex=ex||{};
+ return '<div class="pills">'+state.items.filter(function(it){return !it.group}).map(function(it){var n=ex[it.id]||0;
+  return '<span class="pill'+(n?' has':'')+'"><b data-act="inc" data-id="'+id+'" data-i="'+it.id+'">'+esc(it.short||it.name)+(n>1?' ×'+n:(n===1?' ✓':''))+'</b>'+
+  (n?'<i data-act="dec" data-id="'+id+'" data-i="'+it.id+'">−</i>':'')+'</span>'}).join('')+'</div>'}
+function stepper(act,id,val){return '<div class="step"><button data-act="'+act+'-"'+(id?' data-id="'+id+'"':'')+'>−</button><span>'+val+'</span><button data-act="'+act+'+"'+(id?' data-id="'+id+'"':'')+'>+</button></div>'}
+
+function renderControls(){
+ var s=state,h='';
+ h+='<div class="ban">Сеанс</div><div class="sec">'+
+  '<div class="row">'+I.clock+'<div class="lbl">Часов в бане</div>'+stepper('h','',fh(s.hours))+'</div>'+
+  '<div class="row">'+I.man+'<div class="lbl">Банщик Саша с нами<small>платим за него как за участника — скидываются те, кого он попарил</small></div><button class="sw'+(s.sasha.on?' on':'')+'" data-act="sasha"></button></div>'+
+  '<div class="row">'+I.round+'<div class="lbl">Округлять до</div><select id="round">'+[1,10,50,100].map(function(v){return '<option value="'+v+'"'+(s.round==v?' selected':'')+'>'+v+' грн</option>'}).join('')+'</select></div>'+
+  '</div>';
+ h+='<div class="ban">Кто пришёл</div><div class="sec">';
+ if(s.people.length)h+='<div class="chips">'+s.people.map(function(p){return '<button class="chip'+(p.present?' on':'')+'" data-act="tp" data-id="'+p.id+'">'+esc(p.name)+'</button>'}).join('')+'</div>';
+ else h+='<div class="hint">Добавь имена — список сохранится. В следующий раз просто отмечай, кто пришёл.</div>';
+ h+='<div class="add"><input id="newName" placeholder="Имя участника" maxlength="24" enterkeyhint="done"><button class="btn" data-act="add">＋</button></div>';
+ s.people.filter(function(p){return p.present}).forEach(function(p){
+  h+='<div class="person"><div class="phead"><span class="pname">'+esc(p.name)+'</span>'+
+   '<button class="mini'+(p.kid?' on':'')+'" data-act="kid" data-id="'+p.id+'">до 7 лет</button>'+
+   '<button class="mini" data-act="del" data-id="'+p.id+'">✕</button></div>';
+  if(s.sasha.on){var n=p.steam||0;
+   h+='<div class="steam'+(n?' on':'')+'"><div class="t"><svg viewBox="0 0 24 24"><path d="M4 20C4 10 10 4 20 4c0 10-6 16-16 16z" fill="currentColor"/></svg>Саша парил, заходов</div>'+stepper('st',p.id,n)+'</div>'}
+  h+=pills(p.id,p.extras)+'</div>';
+ });
+ h+='</div>';
+ // веники
+ h+='<div class="ban">Веники</div><div class="sec">';
+ BROOMS.forEach(function(b){h+='<div class="row">'+I.leaf+'<div class="lbl">'+b.name+'<small>'+fmt(price('broom'))+' грн.</small></div>'+stepper('br',b.id,s.brooms[b.id]||0)+'</div>'});
+ h+='<div class="info" id="broomInfo"></div></div>';
+ // чаевые
+ var tp=s.tip;
+ h+='<div class="ban">Чаевые</div><div class="sec">'+
+  '<div class="row" style="background:none;min-height:auto;padding-bottom:0">'+I.coin+'<div class="lbl">Персоналу бани<small>делится поровну на всех взрослых</small></div></div>'+
+  '<div class="tips">'+[0,5,10,15].map(function(v){return '<button class="chip'+(tp.mode==='pct'&&+tp.value===v?' on':'')+'" data-act="tipp" data-v="'+v+'">'+(v?v+'%':'нет')+'</button>'}).join('')+
+  '<input id="tipAmt" type="number" inputmode="numeric" min="0" step="50" placeholder="сумма" value="'+(tp.mode==='amt'&&tp.value?tp.value:'')+'"></div>';
+ if(s.sasha.on){var st=+s.sasha.tip||0;
+  h+='<div class="row" style="background:none;min-height:auto;padding:12px 0 0">'+I.man+'<div class="lbl">Саше<small>платят те, кого он парил</small></div></div>'+
+   '<div class="tips">'+[0,200,300,500].map(function(v){return '<button class="chip'+(st===v?' on':'')+'" data-act="stip" data-v="'+v+'">'+(v?v:'нет')+'</button>'}).join('')+
+   '<input id="sashaTip" type="number" inputmode="numeric" min="0" step="50" placeholder="сумма" value="'+([0,200,300,500].indexOf(st)<0&&st?st:'')+'"></div>';
+ }
+ h+='<div class="info" id="tipInfo"></div></div>';
+ $('#controls').innerHTML=h;
+}
+function renderPrices(){var p=state.prices,h='';
+ h+='<div class="pr"><span>Аренда до N чел., грн/час</span><input data-cfg="base" type="number" inputmode="numeric" value="'+p.base+'"></div>';
+ h+='<div class="pr"><span>N — порог людей</span><input data-cfg="baseMax" type="number" inputmode="numeric" value="'+p.baseMax+'"></div>';
+ h+='<div class="pr"><span>Больше N — с человека, грн/час</span><input data-cfg="perHead" type="number" inputmode="numeric" value="'+p.perHead+'"></div>';
+ state.items.forEach(function(it){h+='<div class="pr"><span>'+esc(it.name)+'</span><input data-price="'+it.id+'" type="number" inputmode="numeric" value="'+it.price+'"></div>'});
+ h+='<div class="btns"><button class="btn ghost" data-act="resetprices">Вернуть цены из прайса</button></div>';
+ $('#prices').innerHTML=h}
+
+function renderResult(){
+ var c=calc(),h='';
+ var bi=$('#broomInfo');
+ if(bi)bi.innerHTML=c.broomsN?c.broomsN+' × '+fmt(price('broom'))+' = <b>'+fmt(c.broomsTotal)+'</b> грн → '+(c.payers.length?'по <b>'+fmt(c.broomEach)+'</b> с каждого':'отметь участников'):'Сколько веников берём на всех? Сумма делится поровну.';
+ var ti=$('#tipInfo');
+ if(ti){var t=[];
+  t.push(c.staffTip?'Персоналу: <b>'+fmt(c.staffTip)+'</b> грн → по <b>'+fmt(c.tipEach)+'</b> с каждого':'Персоналу: без чаевых');
+  if(state.sasha.on)t.push(c.sashaTip?'Саше: <b>'+fmt(c.sashaTip)+'</b> грн → '+(c.steamTotal?'на попаренных':'пока на всех (никто не отмечен)'):'Саше: без чаевых');
+  ti.innerHTML=t.join('<br>')}
+ if(!c.rows.length){h='<div class="hint" style="text-align:center">Отметь, кто пришёл — здесь появится, по сколько с каждого.</div>';$('#result').innerHTML=h;updMain(c);return}
+ h+='<div class="hero2"><div class="cap">базово с каждого</div><div class="num">'+fmt(c.base)+'<em>грн.</em></div>'+
+  '<div class="sub">аренда '+fmt(c.share)+(c.broomEach?' + веники '+fmt(c.broomEach):'')+(c.tipEach?' + чаевые '+fmt(c.tipEach):'')+(c.fallback?' + доля Саши':'')+'</div></div>';
+ if(state.sasha.on&&c.pool>0){
+  var parts=['место '+fmt(c.sashaRent)];if(c.sashaTip)parts.push('чаевые '+fmt(c.sashaTip));
+  if(c.fallback)h+='<div class="info warn">Отметь, кого Саша парил — сейчас его доля ('+parts.join(' + ')+' = <b>'+fmt(c.pool)+'</b>) делится на всех.</div>';
+  else{var who=c.rows.filter(function(r){return r.p.steam}).map(function(r){return esc(r.p.name)+(r.p.steam>1?' ×'+r.p.steam:'')}).join(', ');
+   h+='<div class="info">Доля Саши: '+parts.join(' + ')+' = <b>'+fmt(c.pool)+'</b> → платят: '+who+'</div>'}
+ }
+ c.rows.forEach(function(r){var d=[];
+  if(r.p.kid)d.push('ребёнок — вход бесплатно');else d.push('аренда '+fmt(r.rent));
+  if(r.br)d.push('веники '+fmt(r.br));if(r.tp)d.push('чаевые '+fmt(r.tp));
+  d=d.concat(extrasText(r.p.extras));if(r.sp>0)d.push('за Сашу '+fmt(r.sp));
+  h+='<div class="rrow"><div><div class="n">'+esc(r.p.name)+'</div><div class="d">'+d.join(' · ')+'</div></div><div class="num">'+fmt(r.pay)+'<em>грн.</em></div></div>'});
+ if(state.sasha.on)h+='<div class="rrow"><div><div class="n">Саша</div><div class="d">парит — не платит</div></div><div class="num" style="color:var(--ok)">0</div></div>';
+ h+='<div class="tot"><span>Собрать всего</span><span class="num">'+fmt(c.collected)+'<em>грн.</em></span></div>';
+ h+='<div class="bath"><span>Бане: '+fmt(c.bath)+(c.sashaTip?' · Саше: '+fmt(c.sashaTip):'')+'</span><span>'+(c.surplus>0.5?'запас +'+fmt(c.surplus):'')+'</span></div>';
+ h+='<div class="bath"><span>Аренда: '+formula(c)+'</span></div>';
+ h+='<div class="btns"><button class="btn" data-act="copy">Копировать</button><button class="btn pri" data-act="share">Отправить в чат</button></div>';
+ $('#result').innerHTML=h;updMain(c);
+}
+function renderAll(){renderControls();renderResult();renderPrices()}
+
+function text(){var c=calc(),d=new Date(),dd=('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2),L=[];
+ L.push('♨ Лазня '+dd+' — '+fh(c.H)+' ч, '+c.rows.length+' чел.'+(state.sasha.on?' + Саша':''));
+ L.push('Базово с каждого: '+fmt(c.base)+' грн');
+ L.push('Аренда: '+formula(c));
+ if(c.broomsTotal)L.push('Веники: '+c.broomsN+' × '+fmt(price('broom'))+' = '+fmt(c.broomsTotal));
+ if(c.staffTip)L.push('Чаевые персоналу: '+fmt(c.staffTip));
+ if(c.sashaTip)L.push('Чаевые Саше: '+fmt(c.sashaTip));
+ L.push('');
+ c.rows.forEach(function(r){var d=[];if(!r.p.kid)d.push('аренда '+fmt(r.rent));else d.push('ребёнок');
+  if(r.br)d.push('веники '+fmt(r.br));if(r.tp)d.push('чаевые '+fmt(r.tp));d=d.concat(extrasText(r.p.extras));if(r.sp>0)d.push('Саша '+fmt(r.sp));
+  L.push('• '+r.p.name+': '+fmt(r.pay)+' ('+d.join(', ')+')')});
+ if(state.sasha.on&&c.pool>0)L.push('',c.fallback?'🧖 Доля Саши разделена на всех.':'🧖 Доля Саши ('+fmt(c.pool)+') — на тех, кого он парил 🌿');
+ L.push('','Собрать: '+fmt(c.collected)+' грн · бане: '+fmt(c.bath)+(c.sashaTip?' · Саше: '+fmt(c.sashaTip):''));
+ return L.join('\n')}
+function copy(){var t=text();
+ function fb(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove();toast('Скопировано')}
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast('Скопировано')},fb);else fb()}
+function share(){var t=text();
+ if(inTg){try{TG.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent(t));return}catch(e){}}
+ if(navigator.share){navigator.share({text:t}).catch(function(){});return}
+ copy()}
+function updMain(c){if(!inTg)return;try{
+ if(c.rows.length)TG.MainButton.setParams({text:'Отправить расчёт · по '+fmt(c.base)+' грн',color:'#d9711f',text_color:'#fff3df',is_visible:true});else TG.MainButton.hide()}catch(e){}}
+function ask(msg,cb){if(inTg&&TG.isVersionAtLeast&&TG.isVersionAtLeast('6.2'))TG.showConfirm(msg,function(ok){if(ok)cb()});else if(window.confirm(msg))cb()}
+
+/* ---------- события ---------- */
+function addPerson(){var inp=$('#newName'),n=(inp.value||'').trim();if(!n)return;
+ state.people.push({id:uid(),name:n,present:true,kid:false,steam:0,extras:{}});save();renderAll();hap();
+ setTimeout(function(){var i=$('#newName');if(i)i.focus()},0)}
+document.addEventListener('click',function(e){
+ var b=e.target.closest('[data-act]');if(!b)return;
+ var a=b.dataset.act,id=b.dataset.id,p=id?person(id):null;
+ switch(a){
+  case 'h+':state.hours=Math.min(12,state.hours+0.5);break;
+  case 'h-':state.hours=Math.max(0.5,state.hours-0.5);break;
+  case 'sasha':state.sasha.on=!state.sasha.on;break;
+  case 'tp':p.present=!p.present;break;
+  case 'kid':p.kid=!p.kid;break;
+  case 'st+':p.steam=(p.steam||0)+1;break;
+  case 'st-':p.steam=Math.max(0,(p.steam||0)-1);break;
+  case 'br+':state.brooms[id]=(state.brooms[id]||0)+1;break;
+  case 'br-':state.brooms[id]=Math.max(0,(state.brooms[id]||0)-1);break;
+  case 'inc':p.extras=p.extras||{};p.extras[b.dataset.i]=(p.extras[b.dataset.i]||0)+1;break;
+  case 'dec':var k=b.dataset.i;p.extras[k]=Math.max(0,(p.extras[k]||0)-1);if(!p.extras[k])delete p.extras[k];break;
+  case 'tipp':state.tip={mode:'pct',value:+b.dataset.v};break;
+  case 'stip':state.sasha.tip=+b.dataset.v;break;
+  case 'add':addPerson();return;
+  case 'del':ask('Убрать «'+p.name+'» из списка?',function(){state.people=state.people.filter(function(x){return x.id!==id});save();renderAll()});return;
+  case 'copy':copy();return;
+  case 'share':share();return;
+  case 'resetprices':state.items=JSON.parse(JSON.stringify(DEFAULT_ITEMS));state.prices=defaults().prices;save();renderAll();toast('Цены из прайса');return;
+  case 'newsession':ask('Начать новый сеанс? Отметки, веники и чаевые сбросятся, список имён останется.',function(){
+   state.people.forEach(function(x){x.present=false;x.steam=0;x.extras={}});state.brooms={};state.tip={mode:'pct',value:0};state.sasha.tip=0;save();renderAll();window.scrollTo(0,0)});return;
+  default:return;
+ }
+ hap();save();renderControls();renderResult();
+});
+document.addEventListener('keydown',function(e){if(e.target.id==='newName'&&e.key==='Enter'){e.preventDefault();addPerson()}});
+function clearChips(act){var l=document.querySelectorAll('[data-act="'+act+'"]');for(var i=0;i<l.length;i++)l[i].classList.remove('on')}
+document.addEventListener('input',function(e){var t=e.target,v=Math.max(0,+t.value||0);
+ if(t.id==='tipAmt'){state.tip={mode:'amt',value:v};clearChips('tipp')}
+ else if(t.id==='sashaTip'){state.sasha.tip=v;clearChips('stip')}
+ else if(t.dataset.price){var it=itemById(t.dataset.price);if(it)it.price=v}
+ else if(t.dataset.cfg){state.prices[t.dataset.cfg]=t.dataset.cfg==='baseMax'?Math.max(1,Math.round(v)):v}
+ else return;
+ save();renderResult()});
+document.addEventListener('change',function(e){if(e.target.id==='round'){state.round=+e.target.value;save();renderResult()}
+ if(e.target.dataset&&(e.target.dataset.price||e.target.dataset.cfg))renderControls(),renderResult()});
+
+var d=new Date(),days=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+$('#date').textContent=days[d.getDay()]+', '+('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+d.getFullYear();
+if(inTg){try{TG.ready();TG.expand();TG.setHeaderColor('#1a0e06');TG.setBackgroundColor('#120a05');TG.MainButton.onClick(share)}catch(e){}}
+load(function(){renderAll()});
+})();
+</script>
+</body>
+</html>
