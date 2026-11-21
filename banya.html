@@ -153,15 +153,15 @@ details summary::-webkit-details-marker{display:none}
 .super .grp:last-child{background:none}
 .priceimg{display:block;width:100%;border-radius:12px;margin:8px 0 4px;border:1px solid rgba(240,200,121,.35);cursor:zoom-in}
 .phint{text-align:center;font-size:11px;color:var(--muted);font-style:italic;margin-bottom:6px}
-.zoomwrap{position:fixed;inset:0;z-index:50;background:#080402;display:none;overflow:auto;-webkit-overflow-scrolling:touch}
-.zoomwrap.on{display:flex;align-items:center}
-.zoomwrap.big{align-items:flex-start}
-.zoomwrap img{display:block;width:100%;max-width:900px;margin:auto;flex-shrink:0}
-.zoomwrap.big img{width:200%;max-width:none}
+.zoomwrap{position:fixed;inset:0;z-index:50;background:#080402;display:none;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:54px 12px 20px}
+.zoomwrap.on{display:block}
+.zoomwrap img{display:block;width:auto;max-width:100%;max-height:calc(100vh - 110px);margin:0 auto;object-fit:contain;border-radius:10px}
+.zoomwrap .pedit-box{max-width:560px;margin:10px auto 0}
 .zoomwrap .zh{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);font-size:12px;color:var(--muted);background:rgba(0,0,0,.6);padding:5px 10px;border-radius:10px;font-style:italic;white-space:nowrap}
 .zoomwrap .zx{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.6);border:1px solid rgba(240,200,121,.5);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px}
 .pedit-sum{font-size:12px;color:var(--muted);font-style:italic;padding:6px 0;text-decoration:underline dotted}
-.pricebtn{border:0;cursor:pointer;font-family:Bitter,serif;font-size:18px!important;padding:10px 34px 11px!important;margin:14px auto 4px!important}
+.pricesec{cursor:pointer;text-align:center;padding:6px 14px 8px}
+.pricesec .ban{margin:6px auto}
 .pedit-box{text-align:center}
 .pedit-box .sec{text-align:left}
 /* компакт */
@@ -203,17 +203,15 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   <div id="controls"></div>
   <div class="ban" id="resBan">С каждого</div>
   <div class="sec" id="result"></div>
-  <button class="ban pricebtn" data-act="zoom">📜 Прайс бани</button>
-  <details class="pedit-box">
-    <summary class="pedit-sum">⚙ изменить цены аренды для расчёта</summary>
-    <div class="sec"><div id="prices"></div></div>
-  </details>
+  <div class="sec pricesec" data-act="zoom">
+    <span class="ban sm">Прайс бани</span>
+  </div>
   <div class="btns"><button class="btn ghost" data-act="newsession">Новый сеанс</button></div>
   <div class="foot">ТЕПЛО · ЗДОРОВ'Я · ВІДПОЧИНОК · ГАРМОНІЯ</div>
-  <div class="foot" style="opacity:.55;margin-top:4px">версия 13 · 21.11.2026</div>
+  <div class="foot" style="opacity:.55;margin-top:4px">версия 15 · 21.11.2026</div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="zoomwrap" id="zoomwrap"><img src="price.jpg" alt="Прайс бани" data-act="zoom2"><span class="zx" data-act="unzoom">✕</span><span class="zh">нажми — крупнее · ✕ — закрыть</span></div>
+<div class="zoomwrap" id="zoomwrap"><span class="zx" data-act="unzoom">✕</span><img src="price.jpg" alt="Прайс бани"><details class="pedit-box"><summary class="pedit-sum">⚙ цены аренды для расчёта</summary><div class="sec"><div id="prices"></div></div></details></div>
 <script>
 (function(){
 var TG=window.Telegram&&window.Telegram.WebApp;
@@ -298,7 +296,7 @@ function renderControls(){
  h+='<div class="sec">'+
   '<div class="row">'+I.clock+'<div class="lbl">Часов в бане</div>'+stepper('h',fh(s.hours))+'</div>'+
   '<div class="row">'+I.group+'<div class="lbl">Участников<small>без Саши</small></div>'+stepper('n',s.count)+'</div>'+
-  '<div class="row">'+I.man+'<div class="lbl">Вызываем СУПЕР Сашу — банщика<small>Очищает как телесно, так и духовно. Обладает секретными техниками древности. Эксклюзивная опция — перерождение в ручье.<br><b class="sep">Оплачивается отдельно. В общий счёт не входит. И за баню не платит.</b></small></div><button class="sw'+(s.sasha.on?' on':'')+'" data-act="sasha"></button></div>'+
+  '<div class="row">'+I.man+'<div class="lbl">Вызываем СУПЕР Сашу — банщика<small>Очищает как телесно, так и духовно. Обладает секретными техниками древности. Эксклюзивная опция — перерождение в ручье.<br><b class="sep">Оплачивается отдельно. И за баню не платит.</b></small></div><button class="sw'+(s.sasha.on?' on':'')+'" data-act="sasha"></button></div>'+
   '</div>';
  if(s.sasha.on){
   h+='<div class="ban">Кого парил Саша</div><div class="sec"><div class="plist">';
@@ -328,7 +326,7 @@ function renderPrices(){var p=state.prices,h='';
 
 function renderResult(){
  var c=calc(),h='';
- var rb=$('#resBan');if(rb)rb.textContent='С каждого';
+ var rb=$('#resBan');if(rb)rb.textContent=c.sOn?'Кто сколько платит':'С каждого';
  var bt=$('#btot');if(bt)bt.innerHTML=c.broomsTotal?'= '+fmt(c.broomsTotal)+'<em>грн</em>':'';
  var mi=$('#moneyInfo');
  if(mi){var t=[];
@@ -336,18 +334,21 @@ function renderResult(){
   if(c.staffTip)t.push('чаевые бане по <b>'+fmt(c.tipEach)+'</b>');
   mi.innerHTML=t.length?'С каждого: '+t.join(' · '):'Впиши суммы — разделю сам.'}
  var base=Math.ceil(c.share+c.broomEach+c.tipEach-1e-9),se=Math.ceil(c.poolEach-1e-9);
- h+='<div class="hero2"><div class="cap">'+(c.sOn?'общий счёт · с каждого':'с каждого')+'</div><div class="num">'+fmt(base)+'<em>грн.</em></div>'+
-  '<div class="sub">аренда '+fmt(c.share)+(c.broomEach?' + веники '+fmt(c.broomEach):'')+(c.tipEach?' + чаевые '+fmt(c.tipEach):'')+'</div></div>';
- h+='<div class="tot"><span>Общий счёт</span><span class="num">'+fmt(base*c.n)+'<em>грн.</em></span></div>';
- h+='<div class="bath"><span>'+c.n+' чел. × '+fmt(base)+' · Аренда: '+formula(c)+'</span></div>';
- if(c.sOn&&c.pool>0){
-  h+='<div class="super"><div class="t">⚡ СУПЕР Саша — отдельно<small>в общий счёт не входит · его место в бане '+fmt(c.pool)+' грн</small></div>';
-  if(c.fallback)h+='<div class="info warn">Отметь, кого Саша парил — пока по <b>'+fmt(se)+'</b> с каждого.</div>';
-  else{
-   h+='<div class="grp"><div><div class="n">🌿 Парились · '+c.steamers.length+'</div><div class="d">'+names(c.steamers)+'</div></div><div class="num">+'+fmt(se)+'<em>грн.</em></div></div>';
-   h+='<div class="grp"><div><div class="n">Итого попаренным</div><div class="d">общий счёт '+fmt(base)+' + Саша '+fmt(se)+'</div></div><div class="num">'+fmt(base+se)+'<em>грн.</em></div></div>';
+ var parts='аренда '+fmt(c.share)+(c.broomEach?' + веники '+fmt(c.broomEach):'')+(c.tipEach?' + чаевые '+fmt(c.tipEach):'');
+ if(!c.sOn){
+  h+='<div class="hero2"><div class="cap">с каждого</div><div class="num">'+fmt(base)+'<em>грн.</em></div><div class="sub">'+parts+'</div></div>';
+  h+='<div class="tot"><span>Всего</span><span class="num">'+fmt(base*c.n)+'<em>грн.</em></span></div>';
+  h+='<div class="bath"><span>'+c.n+' чел. × '+fmt(base)+' · Аренда: '+formula(c)+'</span></div>';
+ }else{
+  if(c.fallback||!c.pool){
+   if(c.pool)h+='<div class="info warn">Отметь, кого Саша парил — пока его место ('+fmt(c.pool)+') делится на всех.</div>';
+   h+='<div class="grp"><div><div class="n">Все · '+c.n+'</div><div class="d">'+parts+(c.pool?' + Саша '+fmt(se):'')+'</div></div><div class="num">'+fmt(base+(c.pool?se:0))+'<em>грн.</em></div></div>';
+  }else{
+   h+='<div class="grp"><div><div class="n">🌿 Парились · '+c.steamers.length+'</div><div class="d">'+names(c.steamers)+'<br>'+parts+' + место Саши '+fmt(se)+'</div></div><div class="num">'+fmt(base+se)+'<em>грн.</em></div></div>';
+   if(c.rest.length)h+='<div class="grp"><div><div class="n">Не парились · '+c.rest.length+'</div><div class="d">'+names(c.rest)+'<br>'+parts+'</div></div><div class="num">'+fmt(base)+'<em>грн.</em></div></div>';
   }
-  h+='<div class="d" style="font-size:12px;color:var(--muted);font-style:italic;margin-top:4px">💛 Чаевые Саше — каждый отдельно, от души.</div></div>';
+  h+='<div class="bath"><span>Аренда: '+formula(c)+' · место Саши '+fmt(c.pool)+' — на попаренных</span></div>';
+  h+='<div class="bath"><span>💛 Чаевые Саше — каждый отдельно, от души.</span></div>';
  }
  h+='<div class="btns"><button class="btn" data-act="copy">Копировать</button><button class="btn pri" data-act="share">Отправить в чат</button></div>';
  $('#result').innerHTML=h;updMain(c);
@@ -361,13 +362,13 @@ function text(){var c=calc(),d=new Date(),dd=('0'+d.getDate()).slice(-2)+'.'+('0
  if(c.broomsTotal)L.push('Веники: '+fmt(c.broomsTotal));
  if(c.staffTip)L.push('Чаевые бане: '+fmt(c.staffTip));
  var base=Math.ceil(c.share+c.broomEach+c.tipEach-1e-9),se=Math.ceil(c.poolEach-1e-9);
- L.push('','Общий счёт: с каждого '+fmt(base)+' грн (всего '+fmt(base*c.n)+')');
- if(c.sOn&&c.pool>0){
-  L.push('','⚡ СУПЕР Саша — отдельно, в общий счёт не входит ('+fmt(c.pool)+' грн):');
-  if(c.steamers.length)L.push('🌿 '+plain(c.steamers)+': +'+fmt(se)+' грн → итого по '+fmt(base+se));
-  else L.push('пока никто не отмечен — по '+fmt(se)+' с каждого');
-  L.push('Чаевые Саше — каждый отдельно, от души');
- }
+ L.push('');
+ if(!c.sOn)L.push('С каждого: '+fmt(base)+' грн (всего '+fmt(base*c.n)+')');
+ else if(c.steamers.length&&c.pool){
+  L.push('🌿 Парились ('+plain(c.steamers)+'): по '+fmt(base+se)+' грн');
+  if(c.rest.length)L.push('Не парились ('+plain(c.rest)+'): по '+fmt(base)+' грн');
+  L.push('','Место Саши ('+fmt(c.pool)+') — на попаренных. Чаевые Саше — каждый от души.');
+ }else L.push('Все: по '+fmt(base+(c.pool?se:0))+' грн');
  return L.join('\n')}
 function copy(){var t=text();
  function fb(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove();toast('Скопировано')}
@@ -376,7 +377,7 @@ function share(){var t=text();
  if(inTg){try{TG.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent(t));return}catch(e){}}
  if(navigator.share){navigator.share({text:t}).catch(function(){});return}
  copy()}
-function updMain(c){if(!inTg)return;try{TG.MainButton.setParams({text:'Отправить расчёт · по '+fmt(Math.ceil(c.share+c.broomEach+c.tipEach-1e-9))+' грн',color:'#d9711f',text_color:'#fff3df',is_visible:true})}catch(e){}}
+function updMain(c){if(!inTg)return;try{TG.MainButton.setParams({text:c.sOn?'Отправить расчёт':'Отправить расчёт · по '+fmt(Math.ceil(c.share+c.broomEach+c.tipEach-1e-9))+' грн',color:'#d9711f',text_color:'#fff3df',is_visible:true})}catch(e){}}
 function ask(msg,cb){if(inTg&&TG.isVersionAtLeast&&TG.isVersionAtLeast('6.2'))TG.showConfirm(msg,function(ok){if(ok)cb()});else if(window.confirm(msg))cb()}
 
 /* ---------- события ---------- */
@@ -396,8 +397,7 @@ document.addEventListener('click',function(e){
   case 'badd':state.bl.push({id:uid(),q:0,p:0});break;
   case 'bdel':state.bl=state.bl.filter(function(x){return x.id!==id});break;
   case 'zoom':$('#zoomwrap').classList.add('on');return;
-  case 'unzoom':$('#zoomwrap').classList.remove('on','big');return;
-  case 'zoom2':var z=$('#zoomwrap');z.classList.toggle('big');z.scrollTo(z.scrollWidth/4,0);return;
+  case 'unzoom':$('#zoomwrap').classList.remove('on');return;
   case 'copy':copy();return;
   case 'share':share();return;
   case 'resetprices':state.prices=defaults().prices;save();renderAll();toast('Цены из прайса');return;
