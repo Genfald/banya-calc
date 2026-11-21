@@ -146,6 +146,11 @@ details summary::-webkit-details-marker{display:none}
 .grp .n{font-weight:800;font-size:16px}
 .grp .d{font-size:12px;color:var(--muted);font-style:italic;margin-top:2px}
 .grp .num{font-size:22px}
+.lbl small b.sep{display:block;margin-top:3px;font-style:normal;font-weight:700;color:var(--gold)}
+.super{margin-top:10px;padding:10px 12px;border-radius:12px;background:linear-gradient(180deg,rgba(120,60,15,.45),rgba(60,25,6,.45));border:1px solid rgba(240,200,121,.45)}
+.super .t{font-weight:900;font-size:15px;color:var(--gold);letter-spacing:.02em}
+.super .t small{display:block;font-weight:600;font-size:11px;color:var(--muted);font-style:italic;letter-spacing:0}
+.super .grp:last-child{background:none}
 /* компакт */
 body{padding-top:6px}
 .hero{padding:0}
@@ -191,7 +196,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   </details>
   <div class="btns"><button class="btn ghost" data-act="newsession">Новый сеанс</button></div>
   <div class="foot">ТЕПЛО · ЗДОРОВ'Я · ВІДПОЧИНОК · ГАРМОНІЯ</div>
-  <div class="foot" style="opacity:.55;margin-top:4px">версия 7 · 21.11.2026</div>
+  <div class="foot" style="opacity:.55;margin-top:4px">версия 8 · 21.11.2026</div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -278,7 +283,7 @@ function renderControls(){
  h+='<div class="sec">'+
   '<div class="row">'+I.clock+'<div class="lbl">Часов в бане</div>'+stepper('h',fh(s.hours))+'</div>'+
   '<div class="row">'+I.group+'<div class="lbl">Участников<small>без Саши</small></div>'+stepper('n',s.count)+'</div>'+
-  '<div class="row">'+I.man+'<div class="lbl">Банщик Саша с нами<small>'+(s.sasha.on?'место Саши — на тех, кого парил, чаевые — каждый от души':'без Саши — всем поровну')+'</small></div><button class="sw'+(s.sasha.on?' on':'')+'" data-act="sasha"></button></div>'+
+  '<div class="row">'+I.man+'<div class="lbl">Вызываем СУПЕР Сашу — банщика<small>Очищает как телесно, так и духовно. Обладает секретными техниками древности. Эксклюзивная опция — перерождение в ручье.<br><b class="sep">Оплачивается отдельно. В общий счёт не входит.</b></small></div><button class="sw'+(s.sasha.on?' on':'')+'" data-act="sasha"></button></div>'+
   '</div>';
  if(s.sasha.on){
   h+='<div class="ban">Кого парил Саша</div><div class="sec"><div class="plist">';
@@ -308,30 +313,27 @@ function renderPrices(){var p=state.prices,h='';
 
 function renderResult(){
  var c=calc(),h='';
- var rb=$('#resBan');if(rb)rb.textContent=c.sOn?'Кто сколько платит':'С каждого';
+ var rb=$('#resBan');if(rb)rb.textContent='С каждого';
  var bt=$('#btot');if(bt)bt.innerHTML=c.broomsTotal?'= '+fmt(c.broomsTotal)+'<em>грн</em>':'';
  var mi=$('#moneyInfo');
  if(mi){var t=[];
   if(c.broomsTotal)t.push('веники по <b>'+fmt(c.broomEach)+'</b>');
   if(c.staffTip)t.push('чаевые бане по <b>'+fmt(c.tipEach)+'</b>');
   mi.innerHTML=t.length?'С каждого: '+t.join(' · '):'Впиши суммы — разделю сам.'}
- var split=c.sOn&&c.steamers.length&&c.pool>0;
- if(!c.sOn)h+='<div class="hero2"><div class="cap">'+(split?'с остальных':'с каждого')+'</div><div class="num">'+fmt(c.payRest)+'<em>грн.</em></div>'+
-  '<div class="sub">аренда '+fmt(c.share)+(c.broomEach?' + веники '+fmt(c.broomEach):'')+(c.tipEach?' + чаевые '+fmt(c.tipEach):'')+(c.fallback?' + доля Саши '+fmt(c.poolEach):'')+'</div></div>';
+ var base=Math.ceil(c.share+c.broomEach+c.tipEach-1e-9),se=Math.ceil(c.poolEach-1e-9);
+ h+='<div class="hero2"><div class="cap">'+(c.sOn?'общий счёт · с каждого':'с каждого')+'</div><div class="num">'+fmt(base)+'<em>грн.</em></div>'+
+  '<div class="sub">аренда '+fmt(c.share)+(c.broomEach?' + веники '+fmt(c.broomEach):'')+(c.tipEach?' + чаевые '+fmt(c.tipEach):'')+'</div></div>';
+ h+='<div class="tot"><span>Общий счёт</span><span class="num">'+fmt(base*c.n)+'<em>грн.</em></span></div>';
+ h+='<div class="bath"><span>'+c.n+' чел. × '+fmt(base)+' · Аренда: '+formula(c)+'</span></div>';
  if(c.sOn&&c.pool>0){
-  var parts=['место '+fmt(c.sashaRent)];if(c.sashaTip)parts.push('чаевые '+fmt(c.sashaTip));
-  if(c.fallback){h+='<div class="info warn">Отметь, кого Саша парил — пока его место (<b>'+fmt(c.pool)+'</b>) делится на всех.</div>';
-   h+='<div class="grp"><div><div class="n">Все · '+c.n+'</div><div class="d">поровну, пока нет галочек</div></div><div class="num">'+fmt(c.payRest)+'<em>грн.</em></div></div>';}
+  h+='<div class="super"><div class="t">⚡ СУПЕР Саша — отдельно<small>в общий счёт не входит · его место в бане '+fmt(c.pool)+' грн</small></div>';
+  if(c.fallback)h+='<div class="info warn">Отметь, кого Саша парил — пока по <b>'+fmt(se)+'</b> с каждого.</div>';
   else{
-   h+='<div class="info">Место Саши <b>'+fmt(c.pool)+'</b> → по <b>'+fmt(c.poolEach)+'</b> с попаренных</div>';
-   h+='<div class="grp"><div><div class="n">🌿 Парились · '+c.steamers.length+'</div><div class="d">'+names(c.steamers)+'</div></div><div class="num">'+fmt(c.paySteam)+'<em>грн.</em></div></div>';
-   if(c.rest.length)h+='<div class="grp"><div><div class="n">Остальные · '+c.rest.length+'</div><div class="d">'+names(c.rest)+'</div></div><div class="num">'+fmt(c.payRest)+'<em>грн.</em></div></div>';
+   h+='<div class="grp"><div><div class="n">🌿 Парились · '+c.steamers.length+'</div><div class="d">'+names(c.steamers)+'</div></div><div class="num">+'+fmt(se)+'<em>грн.</em></div></div>';
+   h+='<div class="grp"><div><div class="n">Итого попаренным</div><div class="d">общий счёт '+fmt(base)+' + Саша '+fmt(se)+'</div></div><div class="num">'+fmt(base+se)+'<em>грн.</em></div></div>';
   }
+  h+='<div class="d" style="font-size:12px;color:var(--muted);font-style:italic;margin-top:4px">💛 Чаевые Саше — каждый отдельно, от души.</div></div>';
  }
- if(c.sOn)h+='<div class="info">💛 Чаевые Саше — каждый даёт отдельно, от души. В расчёт не входят.</div>';
- h+='<div class="tot"><span>Собрать всего</span><span class="num">'+fmt(c.collected)+'<em>грн.</em></span></div>';
- h+='<div class="bath"><span>'+c.n+' чел.'+(c.sOn?' + Саша (не платит)':'')+' · Бане: '+fmt(c.bath)+(c.sashaTip?' · Саше: '+fmt(c.sashaTip):'')+'</span></div>';
- h+='<div class="bath"><span>Аренда: '+formula(c)+'</span></div>';
  h+='<div class="btns"><button class="btn" data-act="copy">Копировать</button><button class="btn pri" data-act="share">Отправить в чат</button></div>';
  $('#result').innerHTML=h;updMain(c);
 }
@@ -343,13 +345,14 @@ function text(){var c=calc(),d=new Date(),dd=('0'+d.getDate()).slice(-2)+'.'+('0
  L.push('Аренда: '+formula(c));
  if(c.broomsTotal)L.push('Веники: '+fmt(c.broomsTotal));
  if(c.staffTip)L.push('Чаевые бане: '+fmt(c.staffTip));
- L.push('');
- if(c.sOn&&c.steamers.length&&c.pool>0){
-  L.push('🌿 Парились ('+plain(c.steamers)+'): по '+fmt(c.paySteam)+' грн');
-  if(c.rest.length)L.push('Остальные ('+plain(c.rest)+'): по '+fmt(c.payRest)+' грн');
- }else L.push((c.sOn?'Все (пока без галочек): по ':'С каждого: ')+fmt(c.payRest)+' грн');
- if(c.sOn)L.push('Чаевые Саше — каждый отдельно, от души');
- L.push('','Собрать: '+fmt(c.collected)+' грн · бане: '+fmt(c.bath)+(c.sashaTip?' · Саше: '+fmt(c.sashaTip):''));
+ var base=Math.ceil(c.share+c.broomEach+c.tipEach-1e-9),se=Math.ceil(c.poolEach-1e-9);
+ L.push('','Общий счёт: с каждого '+fmt(base)+' грн (всего '+fmt(base*c.n)+')');
+ if(c.sOn&&c.pool>0){
+  L.push('','⚡ СУПЕР Саша — отдельно, в общий счёт не входит ('+fmt(c.pool)+' грн):');
+  if(c.steamers.length)L.push('🌿 '+plain(c.steamers)+': +'+fmt(se)+' грн → итого по '+fmt(base+se));
+  else L.push('пока никто не отмечен — по '+fmt(se)+' с каждого');
+  L.push('Чаевые Саше — каждый отдельно, от души');
+ }
  return L.join('\n')}
 function copy(){var t=text();
  function fb(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove();toast('Скопировано')}
@@ -358,7 +361,7 @@ function share(){var t=text();
  if(inTg){try{TG.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent(t));return}catch(e){}}
  if(navigator.share){navigator.share({text:t}).catch(function(){});return}
  copy()}
-function updMain(c){if(!inTg)return;try{TG.MainButton.setParams({text:c.sOn?'Отправить расчёт':'Отправить расчёт · по '+fmt(c.payRest)+' грн',color:'#d9711f',text_color:'#fff3df',is_visible:true})}catch(e){}}
+function updMain(c){if(!inTg)return;try{TG.MainButton.setParams({text:'Отправить расчёт · по '+fmt(Math.ceil(c.share+c.broomEach+c.tipEach-1e-9))+' грн',color:'#d9711f',text_color:'#fff3df',is_visible:true})}catch(e){}}
 function ask(msg,cb){if(inTg&&TG.isVersionAtLeast&&TG.isVersionAtLeast('6.2'))TG.showConfirm(msg,function(ok){if(ok)cb()});else if(window.confirm(msg))cb()}
 
 /* ---------- события ---------- */
