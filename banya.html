@@ -196,7 +196,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   </details>
   <div class="btns"><button class="btn ghost" data-act="newsession">Новый сеанс</button></div>
   <div class="foot">ТЕПЛО · ЗДОРОВ'Я · ВІДПОЧИНОК · ГАРМОНІЯ</div>
-  <div class="foot" style="opacity:.55;margin-top:4px">версия 9 · 21.11.2026</div>
+  <div class="foot" style="opacity:.55;margin-top:4px">версия 10 · 21.11.2026</div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -239,7 +239,7 @@ function merge(o){if(!o||typeof o!=='object')return;var d=defaults();
  else if(Array.isArray(o.people)){var pr=o.people.filter(function(p){return p.present});var src=pr.length?pr:o.people;
   names=src.map(function(p){return String(p.name||'')});steamed=src.map(function(p){return !!(p.steamed||p.steam)});count=src.length||d.count}
  var tip=typeof o.tip==='number'?o.tip:(o.tip&&o.tip.mode==='amt'?+o.tip.value||0:0);
- state={v:5,ts:o.ts||0,hours:o.hours||d.hours,count:Math.max(1,Math.min(30,count)),names:names,steamed:steamed,prices:Object.assign(d.prices,o.prices||{}),
+ state={v:5,ts:o.ts||0,hours:Math.max(1,Math.min(12,Math.ceil(+o.hours||d.hours))),count:Math.max(1,Math.min(30,count)),names:names,steamed:steamed,prices:Object.assign(d.prices,o.prices||{}),
   bl:(Array.isArray(o.bl)&&o.bl.length)?o.bl.map(function(x,i){return {id:x.id||uid(),q:+x.q||0,p:+x.p||(i===0?170:0)}}):[{id:'b1',q:0,p:170}],
   tip:tip,sasha:Object.assign(d.sasha,o.sasha||{})}}
 function load(cb){
@@ -370,8 +370,8 @@ document.addEventListener('click',function(e){
  var b=e.target.closest('[data-act]');if(!b)return;
  var a=b.dataset.act,id=b.dataset.id;
  switch(a){
-  case 'h+':state.hours=Math.min(12,state.hours+0.5);break;
-  case 'h-':state.hours=Math.max(0.5,state.hours-0.5);break;
+  case 'h+':state.hours=Math.min(12,state.hours+1);break;
+  case 'h-':state.hours=Math.max(1,state.hours-1);break;
   case 'n+':state.count=Math.min(30,state.count+1);break;
   case 'n-':state.count=Math.max(1,state.count-1);break;
   case 'sasha':state.sasha.on=!state.sasha.on;break;
