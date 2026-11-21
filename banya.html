@@ -138,6 +138,14 @@ details summary::-webkit-details-marker{display:none}
 .esave{background:linear-gradient(180deg,#e8913a,#b8561a);border:1px solid #f6c06a;color:#fff3df;border-radius:8px;font-weight:900;width:34px;height:32px;flex-shrink:0}
 .edel{background:rgba(120,30,10,.35);border:1px solid rgba(255,122,85,.5);color:var(--bad);border-radius:8px;font-family:Bitter,serif;font-size:12px;font-weight:700;padding:0 9px;height:32px;flex-shrink:0}
 .pedit{background:none;border:0;color:#9a7a58;font-size:16px;padding:6px 4px;flex-shrink:0}
+.nrow{display:flex;align-items:center;gap:8px;padding:3px 0}
+.nrow .idx{width:20px;text-align:right;font-family:Oswald,sans-serif;color:#7f6448;font-size:14px;flex-shrink:0}
+.nrow input{flex:1;min-width:0;font-family:Bitter,serif;color:var(--text);font-weight:700;font-size:16px;padding:7px 10px}
+.nrow input::placeholder{color:#8a6a4a;font-weight:600}
+.grp{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;background:linear-gradient(90deg,transparent,var(--line),transparent) bottom/100% 1px no-repeat}
+.grp .n{font-weight:800;font-size:16px}
+.grp .d{font-size:12px;color:var(--muted);font-style:italic;margin-top:2px}
+.grp .num{font-size:22px}
 /* компакт */
 body{padding-top:6px}
 .hero{padding:0}
@@ -190,20 +198,19 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 var TG=window.Telegram&&window.Telegram.WebApp;
 var inTg=!!(TG&&TG.platform&&TG.platform!=='unknown');
 var hasCloud=inTg&&TG.isVersionAtLeast&&TG.isVersionAtLeast('6.9');
-var KEY='banya_v3',OLD='banya_v2';
+var KEY='banya_v5',OLDS=['banya_v3','banya_v2'];
 
 var I={
  clock:'<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
  man:'<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="6" r="3.2" fill="currentColor"/><path d="M5 21c0-5 3-8 7-8s7 3 7 8z" fill="currentColor"/></svg>',
+ group:'<svg class="ico" viewBox="0 0 24 24"><circle cx="8" cy="7" r="2.8" fill="currentColor"/><circle cx="16" cy="7" r="2.8" fill="currentColor"/><path d="M2 20c0-4 2.6-6.5 6-6.5s6 2.5 6 6.5zM10.5 20c.2-2.6-.5-4.6-1.7-6 .9-.3 1.9-.5 3.2-.5h4c3.4 0 6 2.5 6 6.5z" fill="currentColor"/></svg>',
  leaf:'<svg class="ico" viewBox="0 0 24 24"><path d="M4 20C4 10 10 4 20 4c0 10-6 16-16 16z" fill="currentColor" opacity=".9"/><path d="M4 20L15 9M9 15h4M11 13V9" stroke="#2a1205" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>',
- coin:'<svg class="ico" viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="7" ry="3" fill="currentColor"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
- round:'<svg class="ico" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+ coin:'<svg class="ico" viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="7" ry="3" fill="currentColor"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5" fill="none" stroke="currentColor" stroke-width="2"/></svg>'
 };
 
-function defaults(){return {v:3,ts:0,hours:2,round:10,prices:{base:1500,baseMax:5,perHead:300},
- bl:[{id:'b1',q:0,p:0}],tip:{mode:'amt',value:0},sasha:{on:true,tip:0},people:[]}}
+function defaults(){return {v:5,ts:0,hours:2,count:4,names:[],steamed:[],prices:{base:1500,baseMax:5,perHead:300},
+ bl:[{id:'b1',q:0,p:0}],tip:0,sasha:{on:true,tip:0}}}
 var state=defaults();
-var editing=null;
 
 var $=function(s){return document.querySelector(s)};
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -212,7 +219,7 @@ function fh(h){return String(h).replace('.',',')}
 function uid(){return Math.random().toString(36).slice(2,9)}
 function hap(){try{if(inTg)TG.HapticFeedback.selectionChanged()}catch(e){}}
 function toast(t){var el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show')},1800)}
-function person(id){for(var i=0;i<state.people.length;i++)if(state.people[i].id===id)return state.people[i];return null}
+function nm(i){var v=(state.names[i]||'').trim();return v||('Участник '+(i+1))}
 
 /* ---------- хранение ---------- */
 function save(){clearTimeout(save.t);save.t=setTimeout(function(){
@@ -221,45 +228,47 @@ function save(){clearTimeout(save.t);save.t=setTimeout(function(){
  if(hasCloud&&s.length<4000){try{TG.CloudStorage.setItem(KEY,s,function(){})}catch(e){}}
 },300)}
 function merge(o){if(!o||typeof o!=='object')return;var d=defaults();
- var ppl=Array.isArray(o.people)?o.people.map(function(p){return {id:p.id||uid(),name:String(p.name||''),present:!!p.present,steamed:!!(p.steamed||p.steam)}}):[];
- state={v:3,ts:o.ts||0,hours:o.hours||d.hours,round:o.round||d.round,prices:Object.assign(d.prices,o.prices||{}),
-  bl:(Array.isArray(o.bl)&&o.bl.length)?o.bl.map(function(x){return {id:x.id||uid(),q:+x.q||0,p:+x.p||0}}):(o.brooms>0?[{id:'b1',q:1,p:+o.brooms}]:[{id:'b1',q:0,p:0}]),tip:(o.tip&&o.tip.mode==='amt')?o.tip:{mode:'amt',value:0},sasha:Object.assign(d.sasha,o.sasha||{}),people:ppl}}
+ var names=[],steamed=[],count=d.count;
+ if(Array.isArray(o.names)){names=o.names.map(String);steamed=Array.isArray(o.steamed)?o.steamed.map(Boolean):[];count=+o.count||d.count}
+ else if(Array.isArray(o.people)){var pr=o.people.filter(function(p){return p.present});var src=pr.length?pr:o.people;
+  names=src.map(function(p){return String(p.name||'')});steamed=src.map(function(p){return !!(p.steamed||p.steam)});count=src.length||d.count}
+ var tip=typeof o.tip==='number'?o.tip:(o.tip&&o.tip.mode==='amt'?+o.tip.value||0:0);
+ state={v:5,ts:o.ts||0,hours:o.hours||d.hours,count:Math.max(1,Math.min(30,count)),names:names,steamed:steamed,prices:Object.assign(d.prices,o.prices||{}),
+  bl:(Array.isArray(o.bl)&&o.bl.length)?o.bl.map(function(x){return {id:x.id||uid(),q:+x.q||0,p:+x.p||0}}):[{id:'b1',q:0,p:0}],
+  tip:tip,sasha:Object.assign(d.sasha,o.sasha||{})}}
 function load(cb){
- try{var s=localStorage.getItem(KEY)||localStorage.getItem(OLD);if(s)merge(JSON.parse(s))}catch(e){}
+ try{var s=localStorage.getItem(KEY);if(!s)for(var i=0;i<OLDS.length&&!s;i++)s=localStorage.getItem(OLDS[i]);if(s)merge(JSON.parse(s))}catch(e){}
  if(!hasCloud){cb();return}
- try{TG.CloudStorage.getItems([KEY,OLD],function(err,vals){if(!err&&vals){var v=vals[KEY]||vals[OLD];if(v){try{var o=JSON.parse(v);if((o.ts||0)>(state.ts||0))merge(o)}catch(e){}}}cb()})}catch(e){cb()}
+ try{TG.CloudStorage.getItems([KEY].concat(OLDS),function(err,vals){if(!err&&vals){var v=vals[KEY]||vals[OLDS[0]]||vals[OLDS[1]];if(v){try{var o=JSON.parse(v);if((o.ts||0)>(state.ts||0))merge(o)}catch(e){}}}cb()})}catch(e){cb()}
 }
 
 /* ---------- расчёт ---------- */
 function calc(){
- var P=state.people.filter(function(p){return p.present});
- var n=P.length,sOn=!!state.sasha.on&&n>0;
+ var n=Math.max(1,+state.count||1),sOn=!!state.sasha.on;
  var heads=n+(sOn?1:0);
  var H=+state.hours||0,pr=state.prices,rentTotal=0,share=0,mode='';
- if(heads>0&&H>0){if(heads<=pr.baseMax){rentTotal=pr.base*H;mode='flat'}else{rentTotal=pr.perHead*heads*H;mode='head'}share=rentTotal/heads}
- var bsum=0;state.bl.forEach(function(x){bsum+=(+x.q||0)*(+x.p||0)});var broomsTotal=n?bsum:0, broomEach=n?broomsTotal/n:0;
- var tv=+state.tip.value||0;
- var staffTip=n?tv:0;
- var tipEach=n?staffTip/n:0;
- var sashaRent=sOn?share:0, sashaTip=sOn?(+state.sasha.tip||0):0, pool=sashaRent+sashaTip;
- var steamers=sOn?P.filter(function(p){return p.steamed}):[];
- var fallback=pool>0&&!steamers.length;
+ if(H>0){if(heads<=pr.baseMax){rentTotal=pr.base*H;mode='flat'}else{rentTotal=pr.perHead*heads*H;mode='head'}share=rentTotal/heads}
+ var bsum=0;state.bl.forEach(function(x){bsum+=(+x.q||0)*(+x.p||0)});
+ var broomsTotal=bsum,broomEach=bsum/n;
+ var staffTip=+state.tip||0,tipEach=staffTip/n;
+ var sashaRent=sOn?share:0,sashaTip=sOn?(+state.sasha.tip||0):0,pool=sashaRent+sashaTip;
+ var idx=[];for(var i=0;i<n;i++)idx.push(i);
+ var steamers=sOn?idx.filter(function(i){return !!state.steamed[i]}):[];
+ var rest=idx.filter(function(i){return steamers.indexOf(i)<0});
+ var fallback=sOn&&pool>0&&!steamers.length;
  var poolEach=pool>0?(steamers.length?pool/steamers.length:pool/n):0;
  var up=function(x){return x>0?Math.ceil(x-1e-9):0};
- var rows=P.map(function(p){
-  var sp=pool>0&&(fallback||p.steamed)?poolEach:0;
-  var raw=share+broomEach+tipEach+sp;
-  return {p:p,rent:share,br:broomEach,tp:tipEach,sp:sp,pay:up(raw)};
- });
- var collected=0;rows.forEach(function(r){collected+=r.pay});
- var bath=rentTotal+broomsTotal+staffTip;
- return {P:P,n:n,heads:heads,H:H,rentTotal:rentTotal,share:share,mode:mode,broomsTotal:broomsTotal,broomEach:broomEach,staffTip:staffTip,tipEach:tipEach,
-  sashaRent:sashaRent,sashaTip:sashaTip,pool:pool,poolEach:poolEach,steamers:steamers,fallback:fallback,rows:rows,
-  base:up(share+broomEach+tipEach+(fallback?poolEach:0)),bath:bath,collected:collected,surplus:collected-bath-sashaTip};
+ var base=share+broomEach+tipEach;
+ var payRest=up(base+(fallback?poolEach:0)), paySteam=up(base+poolEach);
+ var collected=steamers.length*paySteam+rest.length*payRest;
+ return {n:n,sOn:sOn,heads:heads,H:H,rentTotal:rentTotal,share:share,mode:mode,broomsTotal:broomsTotal,broomEach:broomEach,staffTip:staffTip,tipEach:tipEach,
+  sashaRent:sashaRent,sashaTip:sashaTip,pool:pool,poolEach:poolEach,steamers:steamers,rest:rest,fallback:fallback,
+  payRest:payRest,paySteam:paySteam,bath:rentTotal+broomsTotal+staffTip,collected:collected};
 }
-function formula(c){if(!c.heads)return '—';
+function formula(c){
  if(c.mode==='flat')return 'до '+state.prices.baseMax+' чел.: '+fmt(state.prices.base)+' × '+fh(c.H)+' ч = '+fmt(c.rentTotal);
  return c.heads+' чел. × '+fmt(state.prices.perHead)+' × '+fh(c.H)+' ч = '+fmt(c.rentTotal)}
+function names(list){return list.map(function(i){return esc(nm(i))}).join(', ')}
 
 /* ---------- отрисовка ---------- */
 function stepper(act,val){return '<div class="step"><button data-act="'+act+'-">−</button><span>'+val+'</span><button data-act="'+act+'+">+</button></div>'}
@@ -267,25 +276,24 @@ function renderControls(){
  var s=state,h='';
  h+='<div class="sec">'+
   '<div class="row">'+I.clock+'<div class="lbl">Часов в бане</div>'+stepper('h',fh(s.hours))+'</div>'+
-  '<div class="row">'+I.man+'<div class="lbl">Банщик Саша с нами<small>его долю платят те, кого он парил</small></div><button class="sw'+(s.sasha.on?' on':'')+'" data-act="sasha"></button></div>'+
+  '<div class="row">'+I.group+'<div class="lbl">Участников<small>без Саши</small></div>'+stepper('n',s.count)+'</div>'+
+  '<div class="row">'+I.man+'<div class="lbl">Банщик Саша с нами<small>'+(s.sasha.on?'его долю платят те, кого он парил':'без Саши — всем поровну')+'</small></div><button class="sw'+(s.sasha.on?' on':'')+'" data-act="sasha"></button></div>'+
   '</div>';
- h+='<div class="ban">Кто пришёл</div><div class="sec"><div class="plist">';
- if(!s.people.length)h+='<div class="hint">Добавь имена — список сохранится. В следующий раз просто ставь галочки, кто пришёл.</div>';
- s.people.forEach(function(p){
-  if(editing===p.id){h+='<div class="prow on"><input class="ename" id="ename" value="'+esc(p.name)+'" maxlength="24" enterkeyhint="done"><button class="esave" data-act="esave" data-id="'+p.id+'">✓</button><button class="edel" data-act="del" data-id="'+p.id+'">удалить</button></div>';return}
-  h+='<div class="prow '+(p.present?'on':'off')+'"><button class="pchk" data-act="tp" data-id="'+p.id+'">✓</button>'+
-   '<span class="pname" data-act="tp" data-id="'+p.id+'">'+esc(p.name)+'</span>'+
-   (p.present&&s.sasha.on?'<button class="steamchk'+(p.steamed?' on':'')+'" data-act="steam" data-id="'+p.id+'"><span class="box">'+(p.steamed?'✓':'')+'</span>парил</button>':'')+
-   '<button class="pedit" data-act="edit" data-id="'+p.id+'" aria-label="Изменить">✎</button></div>';
- });
- h+='</div><div class="add"><input id="newName" placeholder="Имя участника" maxlength="24" enterkeyhint="done"><button class="btn" data-act="add">＋</button></div></div>';
+ if(s.sasha.on){
+  h+='<div class="ban">Кого парил Саша</div><div class="sec"><div class="plist">';
+  for(var i=0;i<s.count;i++){var st=!!s.steamed[i];
+   h+='<div class="nrow"><span class="idx">'+(i+1)+'</span><input data-name="'+i+'" value="'+esc(s.names[i]||'')+'" placeholder="Участник '+(i+1)+'" maxlength="24" enterkeyhint="next" autocomplete="off">'+
+    '<button class="steamchk'+(st?' on':'')+'" data-act="steam" data-i="'+i+'"><span class="box">'+(st?'✓':'')+'</span>парил</button></div>';
+  }
+  h+='</div></div>';
+ }
  function money(id,ico,label,val){return '<div class="row money">'+ico+'<div class="lbl">'+label+'</div><input id="'+id+'" type="number" inputmode="numeric" min="0" step="10" placeholder="0" value="'+(val||'')+'"><span class="cur">грн</span></div>'}
  h+='<div class="ban">Веники и чаевые</div><div class="sec">'+
   '<div class="row" style="background:none;padding-bottom:0">'+I.leaf+'<div class="lbl">Веники<small>штук × цена, поровну на всех</small></div><span class="btot" id="btot"></span></div>'+
   s.bl.map(function(x){return '<div class="bline"><div class="step"><button data-act="bq-" data-id="'+x.id+'">−</button><span>'+(x.q||0)+'</span><button data-act="bq+" data-id="'+x.id+'">+</button></div><span class="mul">×</span><input data-bp="'+x.id+'" type="number" inputmode="numeric" min="0" placeholder="цена" value="'+(x.p||'')+'"><span class="cur">грн</span>'+(s.bl.length>1?'<button class="x" data-act="bdel" data-id="'+x.id+'">✕</button>':'')+'</div>'}).join('')+
   '<button class="badd" data-act="badd">+ другая цена</button>'+
   '<div style="height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);margin-top:4px"></div>'+
-  money('tipAmt',I.coin,'Чаевые бане<small>поровну на всех</small>',s.tip.value)+
+  money('tipAmt',I.coin,'Чаевые бане<small>поровну на всех</small>',s.tip)+
   (s.sasha.on?money('sashaTip',I.man,'Чаевые Саше<small>на тех, кого парил</small>',s.sasha.tip):'')+
   '<div class="mhint" id="moneyInfo"></div></div>';
  $('#controls').innerHTML=h;
@@ -294,50 +302,50 @@ function renderPrices(){var p=state.prices,h='';
  h+='<div class="pr"><span>Аренда до N чел., грн/час</span><input data-cfg="base" type="number" inputmode="numeric" value="'+p.base+'"></div>';
  h+='<div class="pr"><span>N — порог людей</span><input data-cfg="baseMax" type="number" inputmode="numeric" value="'+p.baseMax+'"></div>';
  h+='<div class="pr"><span>Больше N — с человека, грн/час</span><input data-cfg="perHead" type="number" inputmode="numeric" value="'+p.perHead+'"></div>';
-  h+='<div class="btns"><button class="btn ghost" data-act="resetprices">Вернуть цены из прайса</button></div>';
+ h+='<div class="btns"><button class="btn ghost" data-act="resetprices">Вернуть цены из прайса</button></div>';
  $('#prices').innerHTML=h}
 
 function renderResult(){
  var c=calc(),h='';
- var bt=$('#btot');if(bt){var bs=0;state.bl.forEach(function(x){bs+=(+x.q||0)*(+x.p||0)});bt.innerHTML=bs?'= '+fmt(bs)+'<em>грн</em>':''}
+ var bt=$('#btot');if(bt)bt.innerHTML=c.broomsTotal?'= '+fmt(c.broomsTotal)+'<em>грн</em>':'';
  var mi=$('#moneyInfo');
  if(mi){var t=[];
   if(c.broomsTotal)t.push('веники по <b>'+fmt(c.broomEach)+'</b>');
   if(c.staffTip)t.push('чаевые бане по <b>'+fmt(c.tipEach)+'</b>');
   if(c.sashaTip)t.push('Саше '+(c.steamers.length?'с попаренных':'пока со всех'));
-  mi.innerHTML=t.length?(c.n?'С каждого: '+t.join(' · '):'Отметь, кто пришёл'):'Впиши суммы — разделю сам.'}
- if(!c.rows.length){$('#result').innerHTML='<div class="hint" style="text-align:center">Отметь, кто пришёл — здесь появится, по сколько с каждого.</div>';updMain(c);return}
- h+='<div class="hero2"><div class="cap">базово с каждого</div><div class="num">'+fmt(c.base)+'<em>грн.</em></div>'+
-  '<div class="sub">аренда '+fmt(c.share)+(c.broomEach?' + веники '+fmt(c.broomEach):'')+(c.tipEach?' + чаевые '+fmt(c.tipEach):'')+(c.fallback?' + доля Саши':'')+'</div></div>';
- if(state.sasha.on&&c.pool>0){
+  mi.innerHTML=t.length?'С каждого: '+t.join(' · '):'Впиши суммы — разделю сам.'}
+ var split=c.sOn&&c.steamers.length&&c.pool>0;
+ h+='<div class="hero2"><div class="cap">'+(split?'с остальных':'с каждого')+'</div><div class="num">'+fmt(c.payRest)+'<em>грн.</em></div>'+
+  '<div class="sub">аренда '+fmt(c.share)+(c.broomEach?' + веники '+fmt(c.broomEach):'')+(c.tipEach?' + чаевые '+fmt(c.tipEach):'')+(c.fallback?' + доля Саши '+fmt(c.poolEach):'')+'</div></div>';
+ if(c.sOn&&c.pool>0){
   var parts=['место '+fmt(c.sashaRent)];if(c.sashaTip)parts.push('чаевые '+fmt(c.sashaTip));
-  if(c.fallback)h+='<div class="info warn">Поставь галочку «парил» — сейчас доля Саши ('+parts.join(' + ')+' = <b>'+fmt(c.pool)+'</b>) делится на всех.</div>';
-  else h+='<div class="info">Доля Саши: '+parts.join(' + ')+' = <b>'+fmt(c.pool)+'</b> → по <b>'+fmt(c.poolEach)+'</b> с попаренных: '+c.steamers.map(function(p){return esc(p.name)}).join(', ')+'</div>';
+  if(c.fallback)h+='<div class="info warn">Отметь, кого Саша парил — пока его доля ('+parts.join(' + ')+' = <b>'+fmt(c.pool)+'</b>) делится на всех.</div>';
+  else{
+   h+='<div class="info">Доля Саши: '+parts.join(' + ')+' = <b>'+fmt(c.pool)+'</b> → по <b>'+fmt(c.poolEach)+'</b> с попаренных</div>';
+   h+='<div class="grp"><div><div class="n">🌿 Парились · '+c.steamers.length+'</div><div class="d">'+names(c.steamers)+'</div></div><div class="num">'+fmt(c.paySteam)+'<em>грн.</em></div></div>';
+   if(c.rest.length)h+='<div class="grp"><div><div class="n">Остальные · '+c.rest.length+'</div><div class="d">'+names(c.rest)+'</div></div><div class="num">'+fmt(c.payRest)+'<em>грн.</em></div></div>';
+  }
  }
- c.rows.forEach(function(r){var d=['аренда '+fmt(r.rent)];
-  if(r.br)d.push('веники '+fmt(r.br));if(r.tp)d.push('чаевые '+fmt(r.tp));if(r.sp>0)d.push('за Сашу '+fmt(r.sp));
-  h+='<div class="rrow"><div><div class="n">'+esc(r.p.name)+(r.p.steamed&&state.sasha.on?' 🌿':'')+'</div><div class="d">'+d.join(' · ')+'</div></div><div class="num">'+fmt(r.pay)+'<em>грн.</em></div></div>'});
- if(state.sasha.on)h+='<div class="rrow"><div><div class="n">Саша</div><div class="d">парит — не платит</div></div><div class="num" style="color:var(--ok)">0</div></div>';
  h+='<div class="tot"><span>Собрать всего</span><span class="num">'+fmt(c.collected)+'<em>грн.</em></span></div>';
- h+='<div class="bath"><span>Бане: '+fmt(c.bath)+(c.sashaTip?' · Саше: '+fmt(c.sashaTip):'')+'</span></div>';
+ h+='<div class="bath"><span>'+c.n+' чел.'+(c.sOn?' + Саша (не платит)':'')+' · Бане: '+fmt(c.bath)+(c.sashaTip?' · Саше: '+fmt(c.sashaTip):'')+'</span></div>';
  h+='<div class="bath"><span>Аренда: '+formula(c)+'</span></div>';
  h+='<div class="btns"><button class="btn" data-act="copy">Копировать</button><button class="btn pri" data-act="share">Отправить в чат</button></div>';
  $('#result').innerHTML=h;updMain(c);
 }
 function renderAll(){renderControls();renderResult();renderPrices()}
 
+function plain(list){return list.map(nm).join(', ')}
 function text(){var c=calc(),d=new Date(),dd=('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2),L=[];
- L.push('♨ Лазня '+dd+' — '+fh(c.H)+' ч, '+c.n+' чел.'+(state.sasha.on?' + Саша':''));
- L.push('Базово с каждого: '+fmt(c.base)+' грн');
+ L.push('♨ Лазня '+dd+' — '+fh(c.H)+' ч, '+c.n+' чел.'+(c.sOn?' + Саша':''));
  L.push('Аренда: '+formula(c));
  if(c.broomsTotal)L.push('Веники: '+fmt(c.broomsTotal));
- if(c.staffTip)L.push('Чаевые персоналу: '+fmt(c.staffTip));
+ if(c.staffTip)L.push('Чаевые бане: '+fmt(c.staffTip));
  if(c.sashaTip)L.push('Чаевые Саше: '+fmt(c.sashaTip));
  L.push('');
- c.rows.forEach(function(r){var d=['аренда '+fmt(r.rent)];
-  if(r.br)d.push('веники '+fmt(r.br));if(r.tp)d.push('чаевые '+fmt(r.tp));if(r.sp>0)d.push('Саша '+fmt(r.sp));
-  L.push('• '+r.p.name+': '+fmt(r.pay)+' ('+d.join(', ')+')')});
- if(state.sasha.on&&c.pool>0)L.push('',c.fallback?'🧖 Доля Саши разделена на всех.':'🧖 Доля Саши ('+fmt(c.pool)+') — на тех, кого он парил 🌿');
+ if(c.sOn&&c.steamers.length&&c.pool>0){
+  L.push('🌿 Парились ('+plain(c.steamers)+'): по '+fmt(c.paySteam)+' грн');
+  if(c.rest.length)L.push('Остальные ('+plain(c.rest)+'): по '+fmt(c.payRest)+' грн');
+ }else L.push('С каждого: '+fmt(c.payRest)+' грн');
  L.push('','Собрать: '+fmt(c.collected)+' грн · бане: '+fmt(c.bath)+(c.sashaTip?' · Саше: '+fmt(c.sashaTip):''));
  return L.join('\n')}
 function copy(){var t=text();
@@ -347,51 +355,41 @@ function share(){var t=text();
  if(inTg){try{TG.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent(t));return}catch(e){}}
  if(navigator.share){navigator.share({text:t}).catch(function(){});return}
  copy()}
-function updMain(c){if(!inTg)return;try{
- if(c.rows.length)TG.MainButton.setParams({text:'Отправить расчёт · по '+fmt(c.base)+' грн',color:'#d9711f',text_color:'#fff3df',is_visible:true});else TG.MainButton.hide()}catch(e){}}
+function updMain(c){if(!inTg)return;try{TG.MainButton.setParams({text:'Отправить расчёт · по '+fmt(c.payRest)+' грн',color:'#d9711f',text_color:'#fff3df',is_visible:true})}catch(e){}}
 function ask(msg,cb){if(inTg&&TG.isVersionAtLeast&&TG.isVersionAtLeast('6.2'))TG.showConfirm(msg,function(ok){if(ok)cb()});else if(window.confirm(msg))cb()}
 
 /* ---------- события ---------- */
 function bl(id){for(var i=0;i<state.bl.length;i++)if(state.bl[i].id===id)return state.bl[i];return {}}
-function applyName(id,v){var p=person(id);v=(v||'').trim();if(p&&v)p.name=v.slice(0,24)}
-function saveName(){var i=$('#ename');if(i&&editing)applyName(editing,i.value);editing=null;save();renderControls();renderResult();hap()}
-function addPerson(){var inp=$('#newName'),n=(inp.value||'').trim();if(!n)return;
- state.people.push({id:uid(),name:n,present:true,steamed:false});save();renderAll();hap();
- setTimeout(function(){var i=$('#newName');if(i)i.focus()},0)}
 document.addEventListener('click',function(e){
  var b=e.target.closest('[data-act]');if(!b)return;
- var a=b.dataset.act,id=b.dataset.id,p=id?person(id):null;
- if(editing&&a!=='esave'&&a!=='del'&&a!=='edit'){var ei=$('#ename');if(ei)applyName(editing,ei.value);editing=null}
+ var a=b.dataset.act,id=b.dataset.id;
  switch(a){
   case 'h+':state.hours=Math.min(12,state.hours+0.5);break;
   case 'h-':state.hours=Math.max(0.5,state.hours-0.5);break;
+  case 'n+':state.count=Math.min(30,state.count+1);break;
+  case 'n-':state.count=Math.max(1,state.count-1);break;
   case 'sasha':state.sasha.on=!state.sasha.on;break;
-  case 'tp':p.present=!p.present;if(!p.present)p.steamed=false;break;
-  case 'steam':p.steamed=!p.steamed;break;
-  case 'tipp':state.tip={mode:'pct',value:+b.dataset.v};break;
-  case 'stip':state.sasha.tip=+b.dataset.v;break;
-  case 'add':addPerson();return;
-  case 'edit':editing=id;renderControls();renderResult();setTimeout(function(){var i=$('#ename');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},0);return;
-  case 'esave':saveName();return;
+  case 'steam':var i=+b.dataset.i;state.steamed[i]=!state.steamed[i];break;
   case 'bq+':bl(id).q=(bl(id).q||0)+1;break;
   case 'bq-':bl(id).q=Math.max(0,(bl(id).q||0)-1);break;
   case 'badd':state.bl.push({id:uid(),q:0,p:0});break;
   case 'bdel':state.bl=state.bl.filter(function(x){return x.id!==id});break;
-  case 'del':ask('Убрать «'+p.name+'» из списка?',function(){editing=null;state.people=state.people.filter(function(x){return x.id!==id});save();renderAll()});return;
   case 'copy':copy();return;
   case 'share':share();return;
   case 'resetprices':state.prices=defaults().prices;save();renderAll();toast('Цены из прайса');return;
-  case 'newsession':ask('Начать новый сеанс? Галочки, веники и чаевые сбросятся, список имён останется.',function(){
-   state.people.forEach(function(x){x.present=false;x.steamed=false});state.bl.forEach(function(x){x.q=0});editing=null;state.tip={mode:'amt',value:0};state.sasha.tip=0;save();renderAll();window.scrollTo(0,0)});return;
+  case 'newsession':ask('Начать новый сеанс? Галочки «парил», веники и чаевые сбросятся. Имена и число участников останутся.',function(){
+   state.steamed=[];state.bl.forEach(function(x){x.q=0});state.tip=0;state.sasha.tip=0;save();renderAll();window.scrollTo(0,0)});return;
   default:return;
  }
  hap();save();renderControls();renderResult();
 });
-document.addEventListener('keydown',function(e){if(e.key!=='Enter')return;if(e.target.id==='newName'){e.preventDefault();addPerson()}else if(e.target.id==='ename'){e.preventDefault();saveName()}});
-function clearChips(act){var l=document.querySelectorAll('[data-act="'+act+'"]');for(var i=0;i<l.length;i++)l[i].classList.remove('on')}
-document.addEventListener('input',function(e){var t=e.target,v=Math.max(0,+t.value||0);
+document.addEventListener('keydown',function(e){if(e.key!=='Enter'||!e.target.dataset||e.target.dataset.name===undefined)return;
+ e.preventDefault();var nx=document.querySelector('[data-name="'+(+e.target.dataset.name+1)+'"]');if(nx)nx.focus();else e.target.blur()});
+document.addEventListener('input',function(e){var t=e.target;
+ if(t.dataset.name!==undefined){state.names[+t.dataset.name]=t.value;save();renderResult();return}
+ var v=Math.max(0,+t.value||0);
  if(t.dataset.bp){bl(t.dataset.bp).p=v}
- else if(t.id==='tipAmt'){state.tip={mode:'amt',value:v}}
+ else if(t.id==='tipAmt'){state.tip=v}
  else if(t.id==='sashaTip'){state.sasha.tip=v}
  else if(t.dataset.cfg){state.prices[t.dataset.cfg]=t.dataset.cfg==='baseMax'?Math.max(1,Math.round(v)):v}
  else return;
